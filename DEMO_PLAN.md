@@ -74,20 +74,20 @@ Tarefas:
 
 ### ETAPA 4 — Z-Pass (Identidade Financeira Digital)
 **Impacto:** Alto — o produto mais diferenciado do documento, hoje invisível  
-**Status:** ⏳ Pendente
+**Status:** ✅ Concluída
 
 Tarefas:
-- [ ] Criar seção Z-Pass no perfil/sidebar (tela dedicada ou modal)
-- [ ] Card visual estilo "passaporte financeiro":
-  - Nome + avatar
-  - Z-Pass ID único (formato ZP-XXXX-XXXX)
-  - Nível KYC com ícone de verificação
-  - Jurisdições habilitadas (🇧🇷 BRA / 🇦🇪 ARE)
-  - Plano atual com badge colorido
+- [x] Criar seção Z-Pass no perfil/sidebar (tela dedicada + botão Z-Pass no sidebar)
+- [x] Card visual estilo "passaporte financeiro" com gradiente dinâmico por persona:
+  - Nome + avatar inicial + e-mail
+  - Z-Pass ID único (formato ZP-XXXX-XXXX derivado do user.id)
+  - KYC FULL + VASP badge na base do card
+  - Jurisdições habilitadas (🇧🇷 BRA ✅ / 🇦🇪 ARE ✅ / 🇺🇸 USA ⏳ / 🇪🇺 EUR ⏳)
+  - Plano atual com badge colorido por persona
   - Data de verificação e próxima revisão
-  - Flags de VASP, FATF risk, PEP
-- [ ] QR Code do Z-Pass (decorativo, para demo)
-- [ ] Exportar Z-Pass como "Passaporte Financeiro Digital"
+  - Flags de VASP, FATF risk, PEP, Sanções, Licença EMI, KYC Level
+- [x] QR Code do Z-Pass (SVG decorativo 21×21 células, cor por persona)
+- [x] Exportar Z-Pass (botão com feedback visual "Exportado!")
 
 ---
 
@@ -187,7 +187,7 @@ Tarefas:
 | 1 | Switcher de Persona | ✅ Concluída |
 | 2 | Conta AED | ✅ Concluída |
 | 3 | Página de Crédito | ✅ Concluída |
-| 4 | Z-Pass | ⏳ Pendente |
+| 4 | Z-Pass | ✅ Concluída |
 | 5 | PIX Internacional | ⏳ Pendente |
 | 6 | Zion AI Proativo | ⏳ Pendente |
 | 7 | Tiers de Cartão | ⏳ Pendente |

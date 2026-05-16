@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react'
-import { Home, ArrowLeftRight, CreditCard, TrendingUp, MoreHorizontal, Zap, Bell, LogOut, Menu, X, Landmark } from 'lucide-react'
+import { Home, ArrowLeftRight, CreditCard, TrendingUp, MoreHorizontal, Zap, Bell, LogOut, Menu, X, Landmark, ShieldCheck } from 'lucide-react'
 import { useApp } from '../App.jsx'
 import PersonaSwitcher, { PERSONA_CFG } from './PersonaSwitcher.jsx'
 
@@ -9,6 +9,10 @@ const NAV = [
   { id: 'cartoes', Icon: CreditCard,     label: 'Cartões' },
   { id: 'credito', Icon: Landmark,       label: 'Crédito' },
   { id: 'mais',    Icon: MoreHorizontal, label: 'Mais' },
+]
+
+const SIDEBAR_EXTRA = [
+  { id: 'zpass', Icon: ShieldCheck, label: 'Z-Pass' },
 ]
 
 export default function Layout({ page, setPage, children }) {
@@ -106,6 +110,28 @@ export default function Layout({ page, setPage, children }) {
               )
             })}
           </nav>
+
+          {/* Z-Pass & extras */}
+          <div style={{ padding: '0 12px 4px' }}>
+            {SIDEBAR_EXTRA.map(({ id, Icon, label }) => {
+              const active = page === id
+              return (
+                <button key={id} onClick={() => nav(id)} style={{
+                  width: '100%', display: 'flex', alignItems: 'center', gap: 12,
+                  padding: '10px 14px', borderRadius: 12, border: '1px solid rgba(255,191,36,0.15)', cursor: 'pointer',
+                  background: active ? 'rgba(251,191,36,0.12)' : 'rgba(251,191,36,0.05)',
+                  color: active ? '#FBBF24' : 'rgba(251,191,36,0.7)',
+                  fontSize: 14, fontWeight: 700,
+                  transition: 'all 0.15s ease',
+                  textAlign: 'left', marginBottom: 6,
+                }}>
+                  <Icon size={16} style={{ flexShrink: 0 }} />
+                  {label}
+                  <span style={{ marginLeft: 'auto', fontSize: 9, fontWeight: 700, color: '#FBBF24', background: 'rgba(251,191,36,0.15)', borderRadius: 4, padding: '2px 5px' }}>ID</span>
+                </button>
+              )
+            })}
+          </div>
 
           {/* Zion AI button */}
           <div style={{ padding: '12px 12px' }}>

@@ -7,6 +7,7 @@ import Mover from './pages/Mover.jsx'
 import Cartoes from './pages/Cartoes.jsx'
 import Investir from './pages/Investir.jsx'
 import Credito from './pages/Credito.jsx'
+import ZPass from './pages/ZPass.jsx'
 import Mais from './pages/Mais.jsx'
 import Toast from './components/Toast.jsx'
 import ZionPanel from './components/ZionPanel.jsx'
@@ -14,7 +15,7 @@ import ZionPanel from './components/ZionPanel.jsx'
 export const AppCtx = createContext(null)
 export const useApp = () => useContext(AppCtx)
 
-const PAGES = { home: Home, mover: Mover, cartoes: Cartoes, investir: Investir, credito: Credito, mais: Mais }
+const PAGES = { home: Home, mover: Mover, cartoes: Cartoes, investir: Investir, credito: Credito, zpass: ZPass, mais: Mais }
 
 export default function App() {
   const [authed, setAuthed] = useState(() => sessionStorage.getItem('zf_auth') === '1')
