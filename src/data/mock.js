@@ -156,6 +156,15 @@ export function buildStore() {
       limitUsed: 28500,
     },
 
+    notifications: [
+      { id:uid(), type:'tx',       title:'PIX recebido',           body:'Ana Clara Lima enviou R$ 1.200,00', read:false, at:daysAgo(0,0.5), icon:'💚' },
+      { id:uid(), type:'market',   title:'BTC +3.2% hoje',          body:'Bitcoin subiu R$ 10.700 nas últimas 24h',  read:false, at:daysAgo(0,1),   icon:'🔵' },
+      { id:uid(), type:'credit',   title:'Parcela vence em 10 dias', body:'Crédito Pessoal — R$ 100,00 em 26/05',     read:false, at:daysAgo(0,2),   icon:'🟡' },
+      { id:uid(), type:'security', title:'Novo acesso detectado',    body:'Login de São Paulo, SP — 177.10.20.1',     read:false, at:daysAgo(0,3),   icon:'🟠' },
+      { id:uid(), type:'kyc',      title:'Revisão KYC em 150 dias', body:'Próxima revisão de conformidade programada', read:true,  at:daysAgo(1),     icon:'🔵' },
+      { id:uid(), type:'tx',       title:'Compra confirmada',        body:'Cartão JIT — iFood R$ 285,00',              read:true,  at:daysAgo(2),     icon:'💚' },
+    ],
+
     invoices:         [],
     payments:         [],
     pixKeys:          [{ id:uid(), type:'EMAIL', key:'rafael@zetta.bank', createdAt:daysAgo(30) }],
@@ -750,6 +759,24 @@ export function simulate(store, action, data = {}) {
       const camp = s.pricingCampaigns.find(c => c.id === data.campaignId) || s.pricingCampaigns[0]
       if (camp) { camp.status = data.status || camp.status; camp.discount = Number(data.discount || camp.discount) }
       msg = `Campanha atualizada: status ${camp?.status}`
+      break
+    }
+
+    /* ── Notificações ──────────────────── */
+    case 'notif_read': {
+      const n = s.notifications.find(n => n.id === data.id)
+      if (n) n.read = true
+      msg = 'Notificação marcada como lida'
+      break
+    }
+    case 'notif_read_all': {
+      s.notifications.forEach(n => { n.read = true })
+      msg = 'Todas as notificações marcadas como lidas'
+      break
+    }
+    case 'notif_clear': {
+      s.notifications = s.notifications.filter(n => !n.read)
+      msg = 'Notificações lidas removidas'
       break
     }
 

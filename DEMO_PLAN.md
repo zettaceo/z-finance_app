@@ -137,18 +137,20 @@ Tarefas:
 
 ### ETAPA 8 — Centro de Notificações
 **Impacto:** Médio — polimento e sensação de produto vivo  
-**Status:** ⏳ Pendente
+**Status:** ✅ Concluída
 
 Tarefas:
-- [ ] Substituir sino decorativo por painel real (slide-down ou modal)
-- [ ] Feed de notificações com tipos:
-  - 💚 Transação confirmada
-  - 🔵 Alerta de mercado (preço cripto)
-  - 🟡 Aprovação pendente
-  - 🔴 Ação necessária (KYC, documento)
-- [ ] Badge com contagem real
-- [ ] Marcar como lida / limpar tudo
-- [ ] Mock: 5-6 notificações iniciais no store
+- [x] Substituir sino decorativo por painel real (dropdown animado do topbar)
+- [x] Feed de notificações com tipos (5 tipos com ícone emoji):
+  - 💚 tx: Transação confirmada
+  - 🔵 market: Alerta de mercado
+  - 🟡 credit: Parcela de crédito
+  - 🟠 security: Acesso detectado
+  - 🔵 kyc: Revisão de compliance
+- [x] Badge numérico real (contagem de não lidas, mostra "9+" se > 9)
+- [x] Marcar individual como lida (clique na notificação) / Marcar todas (botão ✓✓)
+- [x] Limpar lidas (botão lixeira)
+- [x] Mock: 6 notificações no store (4 não lidas, 2 lidas)
 
 ---
 
@@ -192,7 +194,7 @@ Tarefas:
 | 5 | PIX Internacional | ✅ Concluída |
 | 6 | Zion AI Proativo | ✅ Concluída |
 | 7 | Tiers de Cartão | ✅ Concluída |
-| 8 | Centro de Notificações | ⏳ Pendente |
+| 8 | Centro de Notificações | ✅ Concluída |
 | 9 | Welcome / Onboarding | ⏳ Pendente |
 | 10 | Admin Console Separado | ⏳ Pendente |
 

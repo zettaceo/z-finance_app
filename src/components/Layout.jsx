@@ -2,6 +2,7 @@ import React, { useState, useCallback } from 'react'
 import { Home, ArrowLeftRight, CreditCard, TrendingUp, MoreHorizontal, Zap, Bell, LogOut, Menu, X, Landmark, ShieldCheck } from 'lucide-react'
 import { useApp } from '../App.jsx'
 import PersonaSwitcher, { PERSONA_CFG } from './PersonaSwitcher.jsx'
+import NotificationPanel from './NotificationPanel.jsx'
 
 const NAV = [
   { id: 'home',    Icon: Home,           label: 'Início' },
@@ -18,6 +19,8 @@ const SIDEBAR_EXTRA = [
 export default function Layout({ page, setPage, children }) {
   const { store, logout, setZionOpen } = useApp()
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [notifOpen, setNotifOpen] = useState(false)
+  const unreadCount = (store.notifications || []).filter(n => !n.read).length
   const u = store.user
 
   const nav = useCallback((id) => {
@@ -197,18 +200,27 @@ export default function Layout({ page, setPage, children }) {
 
           {/* Right actions */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <button style={{
+            <button onClick={() => setNotifOpen(o => !o)} style={{
               width: 40, height: 40, borderRadius: 12, border: 'none',
-              background: 'var(--surface-2)', cursor: 'pointer',
+              background: notifOpen ? 'rgba(0,229,153,0.12)' : 'var(--surface-2)', cursor: 'pointer',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              color: 'var(--t2)', position: 'relative',
+              color: notifOpen ? 'var(--accent)' : 'var(--t2)', position: 'relative',
+              transition: 'all 0.15s',
             }}>
               <Bell size={17} />
-              <span style={{
-                position: 'absolute', top: 8, right: 8, width: 7, height: 7,
-                borderRadius: '50%', background: 'var(--accent)',
-                border: '1px solid var(--bg)',
-              }} />
+              {unreadCount > 0 && (
+                <span style={{
+                  position: 'absolute', top: 6, right: 6,
+                  minWidth: unreadCount > 9 ? 16 : 14, height: 14,
+                  borderRadius: 7, background: 'var(--accent)',
+                  border: '1.5px solid var(--bg)',
+                  fontSize: 8, fontWeight: 800, color: '#040C1B',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  padding: '0 2px',
+                }}>
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </span>
+              )}
             </button>
             <button onClick={() => setZionOpen(true)} style={{
               width: 40, height: 40, borderRadius: 12, border: 'none',
@@ -227,6 +239,9 @@ export default function Layout({ page, setPage, children }) {
           {children}
         </main>
       </div>
+
+      {/* Notification panel */}
+      {notifOpen && <NotificationPanel onClose={() => setNotifOpen(false)} />}
 
       {/* Bottom nav (mobile) */}
       <nav className="bottom-nav">
