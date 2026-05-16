@@ -42,6 +42,8 @@ export const txDir = (type) => {
 /* ── Default Store ──────────────────────────────────── */
 export function buildStore() {
   return {
+    persona: 'BUSINESS', // 'RETAIL' | 'BUSINESS' | 'INSTITUTIONAL'
+
     user: {
       id:       '00000000-0000-0000-0000-000000000001',
       name:     'Rafael Mendonça',
@@ -702,6 +704,13 @@ export function simulate(store, action, data = {}) {
       const camp = s.pricingCampaigns.find(c => c.id === data.campaignId) || s.pricingCampaigns[0]
       if (camp) { camp.status = data.status || camp.status; camp.discount = Number(data.discount || camp.discount) }
       msg = `Campanha atualizada: status ${camp?.status}`
+      break
+    }
+
+    /* ── Persona ───────────────────────── */
+    case 'persona_switch': {
+      s.persona = data.persona || 'BUSINESS'
+      msg = `Persona: ${s.persona}`
       break
     }
 

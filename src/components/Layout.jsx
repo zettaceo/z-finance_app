@@ -1,6 +1,7 @@
 import React, { useState, useCallback } from 'react'
-import { Home, ArrowLeftRight, CreditCard, TrendingUp, MoreHorizontal, Zap, Bell, ChevronDown, LogOut, Menu, X } from 'lucide-react'
+import { Home, ArrowLeftRight, CreditCard, TrendingUp, MoreHorizontal, Zap, Bell, LogOut, Menu, X } from 'lucide-react'
 import { useApp } from '../App.jsx'
+import PersonaSwitcher, { PERSONA_CFG } from './PersonaSwitcher.jsx'
 
 const NAV = [
   { id: 'home',    Icon: Home,           label: 'Início' },
@@ -20,7 +21,9 @@ export default function Layout({ page, setPage, children }) {
     setSidebarOpen(false)
   }, [setPage])
 
-  const planColor = u.plan === 'INSTITUTIONAL' ? '#FBBF24' : u.plan === 'BUSINESS' ? '#818CF8' : 'var(--accent)'
+  const persona = store.persona || 'BUSINESS'
+  const pc = PERSONA_CFG[persona]
+  const planColor = pc?.color || '#818CF8'
 
   return (
     <div className="app-shell">
@@ -72,11 +75,14 @@ export default function Layout({ page, setPage, children }) {
                   fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em',
                   color: planColor, background: `${planColor}18`, borderRadius: 6, padding: '2px 6px',
                 }}>
-                  {u.plan}
+                  {persona}
                 </span>
               </div>
             </div>
           </div>
+
+          {/* Persona switcher */}
+          <PersonaSwitcher />
 
           {/* Nav items */}
           <nav style={{ padding: '12px 12px', flex: 1 }}>

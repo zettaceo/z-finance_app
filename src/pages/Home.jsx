@@ -1,8 +1,9 @@
 import React, { useState, useMemo } from 'react'
-import { Eye, EyeOff, ArrowUpRight, ArrowDownLeft, RefreshCw, Plus, Send, QrCode, TrendingUp, TrendingDown, ChevronRight, Wifi, Activity } from 'lucide-react'
+import { Eye, EyeOff, ArrowUpRight, ArrowDownLeft, RefreshCw, Send, QrCode, Wifi, Activity, Building2, Globe, Lock, Landmark, ChevronRight, ArrowUpCircle } from 'lucide-react'
 import { AreaChart, Area, ResponsiveContainer, Tooltip, XAxis } from 'recharts'
 import { useApp } from '../App.jsx'
 import SimModal from '../components/SimModal.jsx'
+import { PERSONA_CFG } from '../components/PersonaSwitcher.jsx'
 
 function fmt(cents, cur = 'BRL') {
   const val = cents / 100
@@ -26,12 +27,27 @@ export default function Home() {
   const [hidden, setHidden] = useState(false)
   const [activeAccount, setActiveAccount] = useState('main')
 
+  const persona = store.persona || 'BUSINESS'
+  const pc = PERSONA_CFG[persona]
+  const isRetail = persona === 'RETAIL'
+  const isInstitutional = persona === 'INSTITUTIONAL'
+
   const acc = store.accounts[activeAccount]
   const totalBRL = store.accounts.main.balance + store.accounts.invest.balance
   const cryptoTotal = store.crypto.reduce((s, c) => s + c.amount * c.price, 0)
+  const cryptoBRL = store.crypto.reduce((s, c) => s + c.amount * c.price * 100, 0)
+  const totalWealth = totalBRL + cryptoTotal
 
-  const quickActions = [
-    { label: 'PIX', icon: Send, action: () => setModal({
+  const dailyLimitDisplay = isInstitutional
+    ? 'Ilimitado'
+    : isRetail
+      ? fmt(500000)
+      : fmt(store.kyc.limits.daily)
+  const dailyLimitValue = isRetail ? 500000 : store.kyc.limits.daily
+  const dailyUsed = store.kyc.used?.daily || store.kyc.limits?.used?.daily || 1250000
+
+  const baseActions = [
+    { label: 'PIX', icon: Send, locked: false, action: () => setModal({
       title: 'Enviar PIX', action: 'pix_send',
       successMsg: 'PIX enviado com sucesso!',
       description: 'Transferência instantânea via PIX',
@@ -42,7 +58,7 @@ export default function Home() {
       ],
       submitLabel: 'Enviar PIX',
     })},
-    { label: 'Cobrar', icon: QrCode, action: () => setModal({
+    { label: 'Cobrar', icon: QrCode, locked: false, action: () => setModal({
       title: 'Gerar Cobrança', action: 'invoice_create',
       successMsg: 'Cobrança criada!',
       description: 'Crie uma cobrança por PIX ou USDT',
@@ -53,7 +69,7 @@ export default function Home() {
       ],
       submitLabel: 'Criar cobrança',
     })},
-    { label: 'Câmbio', icon: RefreshCw, action: () => setModal({
+    { label: 'Câmbio', icon: RefreshCw, locked: isRetail, action: isRetail ? null : () => setModal({
       title: 'Câmbio de Moeda', action: 'transfer_internal',
       successMsg: 'Câmbio realizado!',
       description: `Taxas: USD ${(store.market.USD.rate / 100).toFixed(2)} | EUR ${(store.market.EUR.rate / 100).toFixed(2)}`,
@@ -64,16 +80,30 @@ export default function Home() {
       ],
       submitLabel: 'Converter',
     })},
-    { label: 'Depositar', icon: ArrowDownLeft, action: () => setModal({
-      title: 'Simular Depósito', action: 'pix_receive',
-      successMsg: 'Depósito creditado!',
-      fields: [
-        { key: 'amount', label: 'Valor (centavos)', type: 'number', default: 100000 },
-        { key: 'payerName', label: 'Remetente', type: 'text', default: 'Cliente Externo' },
-      ],
-      submitLabel: 'Receber',
-    })},
+    ...(isInstitutional
+      ? [{ label: 'Treasury', icon: Landmark, locked: false, action: () => setModal({
+          title: 'Operação Treasury', action: 'transfer_internal',
+          successMsg: 'Operação executada!',
+          description: 'Movimentação entre contas treasury',
+          fields: [
+            { key: 'fromAccount', label: 'Origem', type: 'select', options: [{ value: 'main', label: 'BRL' }, { value: 'usd', label: 'USD' }] },
+            { key: 'toAccount', label: 'Destino', type: 'select', options: [{ value: 'usd', label: 'USD' }, { value: 'main', label: 'BRL' }] },
+            { key: 'amount', label: 'Valor (centavos)', type: 'number', default: 1000000 },
+          ],
+          submitLabel: 'Executar',
+        })}]
+      : [{ label: 'Depositar', icon: ArrowDownLeft, locked: false, action: () => setModal({
+          title: 'Simular Depósito', action: 'pix_receive',
+          successMsg: 'Depósito creditado!',
+          fields: [
+            { key: 'amount', label: 'Valor (centavos)', type: 'number', default: 100000 },
+            { key: 'payerName', label: 'Remetente', type: 'text', default: 'Cliente Externo' },
+          ],
+          submitLabel: 'Receber',
+        })}]
+    ),
   ]
+  const quickActions = baseActions
 
   const recentTx = useMemo(() => store.transactions.slice(0, 8), [store.transactions])
 
@@ -93,9 +123,21 @@ export default function Home() {
         <div style={{
           position: 'absolute', top: -40, right: -40,
           width: 200, height: 200, borderRadius: '50%',
-          background: 'radial-gradient(circle, rgba(0,229,153,0.08) 0%, transparent 70%)',
+          background: `radial-gradient(circle, ${pc.color}10 0%, transparent 70%)`,
           pointerEvents: 'none',
         }} />
+
+        {/* Persona badge */}
+        <div style={{ position: 'absolute', top: 16, right: 16 }}>
+          <span style={{
+            fontSize: 10, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em',
+            color: pc.color, background: pc.bgColor,
+            border: `1px solid ${pc.color}30`,
+            borderRadius: 8, padding: '3px 8px',
+          }}>
+            {pc.label}
+          </span>
+        </div>
 
         {/* Account tabs */}
         <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
@@ -150,17 +192,25 @@ export default function Home() {
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
             <span style={{ fontSize: 11, color: 'var(--t3)' }}>Limite diário PIX</span>
             <span style={{ fontSize: 11, color: 'var(--t2)', fontFamily: 'DM Mono, monospace' }}>
-              {fmt(store.kyc.limits.used?.daily || 0)} / {fmt(store.kyc.limits.daily)}
+              {isInstitutional ? (
+                <span style={{ color: pc.color }}>Ilimitado</span>
+              ) : (
+                `${fmt(dailyUsed)} / ${dailyLimitDisplay}`
+              )}
             </span>
           </div>
-          <div style={{ height: 4, borderRadius: 2, background: 'var(--surface-2)', overflow: 'hidden' }}>
-            <div style={{
-              height: '100%', borderRadius: 2,
-              background: 'linear-gradient(90deg, var(--accent), var(--accent-2))',
-              width: `${((store.kyc.limits.used?.daily || 0) / store.kyc.limits.daily) * 100}%`,
-              transition: 'width 0.5s ease',
-            }} />
-          </div>
+          {isInstitutional ? (
+            <div style={{ height: 4, borderRadius: 2, background: `linear-gradient(90deg, ${pc.color}, ${pc.color}80)` }} />
+          ) : (
+            <div style={{ height: 4, borderRadius: 2, background: 'var(--surface-2)', overflow: 'hidden' }}>
+              <div style={{
+                height: '100%', borderRadius: 2,
+                background: `linear-gradient(90deg, ${pc.color}, ${pc.color}90)`,
+                width: `${Math.min((dailyUsed / dailyLimitValue) * 100, 100)}%`,
+                transition: 'width 0.5s ease',
+              }} />
+            </div>
+          )}
         </div>
       </div>
 
@@ -171,28 +221,87 @@ export default function Home() {
         gap: 10,
         marginBottom: 24,
       }}>
-        {quickActions.map(({ label, icon: Icon, action }) => (
-          <button key={label} onClick={action} style={{
+        {quickActions.map(({ label, icon: Icon, action, locked }) => (
+          <button key={label} onClick={locked ? undefined : action} style={{
             display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8,
-            padding: '14px 8px', borderRadius: 16, border: '1px solid var(--border)',
-            background: 'var(--surface)', cursor: 'pointer',
+            padding: '14px 8px', borderRadius: 16,
+            border: locked ? '1px dashed var(--border)' : '1px solid var(--border)',
+            background: 'var(--surface)', cursor: locked ? 'not-allowed' : 'pointer',
             transition: 'all 0.15s ease',
-            minHeight: 72,
+            minHeight: 72, opacity: locked ? 0.5 : 1,
+            position: 'relative',
           }}
-          onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(0,229,153,0.3)'; e.currentTarget.style.background = 'rgba(0,229,153,0.05)' }}
-          onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.background = 'var(--surface)' }}
+          onMouseEnter={e => { if (!locked) { e.currentTarget.style.borderColor = `${pc.color}50`; e.currentTarget.style.background = `${pc.color}08` } }}
+          onMouseLeave={e => { e.currentTarget.style.borderColor = locked ? 'var(--border)' : 'var(--border)'; e.currentTarget.style.background = 'var(--surface)' }}
           >
             <div style={{
               width: 36, height: 36, borderRadius: 10,
-              background: 'rgba(0,229,153,0.1)',
+              background: locked ? 'rgba(255,255,255,0.04)' : `${pc.color}18`,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
+              position: 'relative',
             }}>
-              <Icon size={17} color="var(--accent)" />
+              {locked ? <Lock size={15} color="var(--t3)" /> : <Icon size={17} color={pc.color} />}
             </div>
-            <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--t2)', textAlign: 'center', lineHeight: 1.2 }}>{label}</span>
+            <span style={{ fontSize: 11, fontWeight: 600, color: locked ? 'var(--t3)' : 'var(--t2)', textAlign: 'center', lineHeight: 1.2 }}>{label}</span>
+            {locked && (
+              <span style={{
+                position: 'absolute', top: 4, right: 4,
+                fontSize: 8, fontWeight: 700, color: '#FBBF24',
+                background: 'rgba(251,191,36,0.15)', borderRadius: 4, padding: '1px 4px',
+              }}>PRO</span>
+            )}
           </button>
         ))}
       </div>
+
+      {/* Treasury Panel — Institutional only */}
+      {isInstitutional && (
+        <div style={{
+          background: 'linear-gradient(135deg, #0D1F0D 0%, #0A1628 100%)',
+          border: `1px solid ${pc.color}30`,
+          borderRadius: 20, padding: '20px', marginBottom: 20,
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+            <div>
+              <p style={{ fontWeight: 700, fontSize: 15, color: 'var(--t1)', margin: '0 0 2px' }}>Treasury Overview</p>
+              <p style={{ fontSize: 12, color: 'var(--t3)', margin: 0 }}>Posição consolidada global</p>
+            </div>
+            <span style={{
+              fontSize: 11, fontWeight: 700, color: pc.color,
+              background: pc.bgColor, borderRadius: 8, padding: '4px 10px',
+            }}>AUM</span>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, marginBottom: 16 }}>
+            {[
+              { label: 'BRL', value: fmt(store.accounts.main.balance + store.accounts.invest.balance), icon: '🇧🇷', color: 'var(--accent)' },
+              { label: 'USD', value: `$${(store.accounts.usd.balance / 100).toLocaleString('en-US', { minimumFractionDigits: 2 })}`, icon: '🇺🇸', color: '#60A5FA' },
+              { label: 'Crypto', value: fmt(cryptoBRL), icon: '₿', color: '#F7931A' },
+            ].map(({ label, value, icon, color }) => (
+              <div key={label} style={{
+                background: 'rgba(255,255,255,0.04)', borderRadius: 14, padding: '12px 10px', textAlign: 'center',
+              }}>
+                <div style={{ fontSize: 16, marginBottom: 4 }}>{icon}</div>
+                <p style={{ fontFamily: 'DM Mono, monospace', fontSize: 12, fontWeight: 700, color, margin: '0 0 2px' }}>{hidden ? '•••' : value}</p>
+                <p style={{ fontSize: 10, color: 'var(--t3)', margin: 0 }}>{label}</p>
+              </div>
+            ))}
+          </div>
+          <div style={{ borderTop: `1px solid ${pc.color}20`, paddingTop: 14 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontSize: 12, color: 'var(--t3)' }}>AUM Total (BRL equiv.)</span>
+              <span style={{ fontFamily: 'DM Mono, monospace', fontSize: 14, fontWeight: 700, color: pc.color }}>
+                {hidden ? '•••••••' : fmt(totalWealth * 100)}
+              </span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 8 }}>
+              <span style={{ fontSize: 12, color: 'var(--t3)' }}>Crédito disponível</span>
+              <span style={{ fontFamily: 'DM Mono, monospace', fontSize: 14, fontWeight: 700, color: '#60A5FA' }}>
+                {hidden ? '•••••' : fmt(5000000)}
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Cash flow chart */}
       <div style={{
@@ -345,28 +454,57 @@ export default function Home() {
         })}
       </div>
 
-      {/* Observability status */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(3, 1fr)',
-        gap: 10,
-        marginBottom: 8,
-      }}>
-        {[
-          { label: 'Uptime', value: store.observability.uptime, color: 'var(--accent)', icon: Wifi },
-          { label: 'Latência P99', value: `${store.observability.latencyP99}ms`, color: '#60A5FA', icon: Activity },
-          { label: 'Webhooks', value: `${store.observability.pendingWebhooks} pend.`, color: 'var(--gold)', icon: RefreshCw },
-        ].map(({ label, value, color, icon: Icon }) => (
-          <div key={label} style={{
-            background: 'var(--surface)', border: '1px solid var(--border)',
-            borderRadius: 14, padding: '12px 10px', textAlign: 'center',
+      {/* Observability status — Business & Institutional only */}
+      {!isRetail && (
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(3, 1fr)',
+          gap: 10,
+          marginBottom: 8,
+        }}>
+          {[
+            { label: 'Uptime', value: store.observability.uptime, color: 'var(--accent)', icon: Wifi },
+            { label: 'Latência P99', value: `${store.observability.latencyP99}ms`, color: '#60A5FA', icon: Activity },
+            { label: 'Webhooks', value: `${store.observability.pendingWebhooks} pend.`, color: 'var(--gold)', icon: RefreshCw },
+          ].map(({ label, value, color, icon: Icon }) => (
+            <div key={label} style={{
+              background: 'var(--surface)', border: '1px solid var(--border)',
+              borderRadius: 14, padding: '12px 10px', textAlign: 'center',
+            }}>
+              <Icon size={14} style={{ color, marginBottom: 6 }} />
+              <p style={{ fontFamily: 'DM Mono, monospace', fontSize: 13, fontWeight: 700, color: 'var(--t1)', margin: '0 0 2px' }}>{value}</p>
+              <p style={{ fontSize: 10, color: 'var(--t3)', margin: 0 }}>{label}</p>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Upgrade banner — Retail only */}
+      {isRetail && (
+        <div style={{
+          background: 'linear-gradient(135deg, rgba(129,140,248,0.12), rgba(0,229,153,0.08))',
+          border: '1px solid rgba(129,140,248,0.25)',
+          borderRadius: 18, padding: '18px 20px', marginBottom: 8,
+          display: 'flex', alignItems: 'center', gap: 14,
+        }}>
+          <div style={{
+            width: 42, height: 42, borderRadius: 12, flexShrink: 0,
+            background: 'rgba(129,140,248,0.15)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}>
-            <Icon size={14} style={{ color, marginBottom: 6 }} />
-            <p style={{ fontFamily: 'DM Mono, monospace', fontSize: 13, fontWeight: 700, color: 'var(--t1)', margin: '0 0 2px' }}>{value}</p>
-            <p style={{ fontSize: 10, color: 'var(--t3)', margin: 0 }}>{label}</p>
+            <ArrowUpCircle size={22} color="#818CF8" />
           </div>
-        ))}
-      </div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <p style={{ fontWeight: 700, fontSize: 14, color: 'var(--t1)', margin: '0 0 3px' }}>
+              Desbloqueie o plano Business
+            </p>
+            <p style={{ fontSize: 12, color: 'var(--t3)', margin: 0, lineHeight: 1.4 }}>
+              Câmbio multi-moeda, PIX Internacional, observabilidade e mais
+            </p>
+          </div>
+          <ChevronRight size={18} color="var(--t3)" style={{ flexShrink: 0 }} />
+        </div>
+      )}
 
       {modal && <SimModal config={modal} onClose={() => setModal(null)} />}
     </div>
