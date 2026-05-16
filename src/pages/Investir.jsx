@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { TrendingUp, TrendingDown, ArrowUpDown, Zap, DollarSign, RefreshCw } from 'lucide-react'
+import { TrendingUp, TrendingDown, ArrowUpDown, Zap, DollarSign, RefreshCw, ShoppingCart, ArrowUpCircle, ArrowDownCircle, Clock } from 'lucide-react'
 import { AreaChart, Area, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { useApp } from '../App.jsx'
 import SimModal from '../components/SimModal.jsx'
@@ -59,8 +59,9 @@ export default function Investir() {
       <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
         {[
           { id: 'portfolio', label: 'Portfólio' },
-          { id: 'swap', label: 'Swap' },
-          { id: 'pricing', label: 'Precificação' },
+          { id: 'swap',      label: 'Swap' },
+          { id: 'ordens',    label: 'Ordens' },
+          { id: 'pricing',   label: 'Precificação' },
         ].map(t => (
           <button key={t.id} onClick={() => setTab(t.id)} style={{
             padding: '8px 18px', borderRadius: 20, cursor: 'pointer',
@@ -277,6 +278,72 @@ export default function Investir() {
               <span style={{ color: 'var(--t3)' }}>→</span>
             </button>
           ))}
+        </div>
+      )}
+
+      {tab === 'ordens' && (
+        <div style={{ display: 'grid', gap: 12 }}>
+          {/* New order actions */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+            <button onClick={() => setModal({
+              title: 'Ordem de Compra', action: 'trade_order_create', successMsg: 'Ordem de compra executada!',
+              description: 'Compre cripto pelo preço de mercado atual.',
+              fields: [
+                { key: 'symbol', label: 'Ativo', type: 'select', options: [{ value: 'BTC', label: 'Bitcoin (BTC)' }, { value: 'ETH', label: 'Ethereum (ETH)' }, { value: 'SOL', label: 'Solana (SOL)' }, { value: 'USDT', label: 'Tether (USDT)' }] },
+                { key: 'amount', label: 'Quantidade', type: 'number', default: 0.001, step: 0.0001 },
+              ],
+              extraData: { side: 'BUY' },
+              submitLabel: 'Comprar',
+            })} style={{ padding: '16px', borderRadius: 16, border: '1px solid rgba(0,229,153,0.3)', background: 'rgba(0,229,153,0.08)', cursor: 'pointer' }}>
+              <ArrowDownCircle size={24} color="var(--accent)" style={{ marginBottom: 8 }} />
+              <p style={{ fontWeight: 700, fontSize: 15, color: 'var(--accent)', margin: '0 0 2px' }}>Comprar</p>
+              <p style={{ fontSize: 11, color: 'var(--t3)', margin: 0 }}>Ordem market imediata</p>
+            </button>
+            <button onClick={() => setModal({
+              title: 'Ordem de Venda', action: 'trade_order_create', successMsg: 'Ordem de venda executada!',
+              description: 'Venda cripto pelo preço de mercado atual.',
+              fields: [
+                { key: 'symbol', label: 'Ativo', type: 'select', options: [{ value: 'BTC', label: 'Bitcoin (BTC)' }, { value: 'ETH', label: 'Ethereum (ETH)' }, { value: 'SOL', label: 'Solana (SOL)' }, { value: 'USDT', label: 'Tether (USDT)' }] },
+                { key: 'amount', label: 'Quantidade a vender', type: 'number', default: 0.001, step: 0.0001 },
+              ],
+              extraData: { side: 'SELL' },
+              submitLabel: 'Vender',
+            })} style={{ padding: '16px', borderRadius: 16, border: '1px solid rgba(248,113,113,0.3)', background: 'rgba(248,113,113,0.08)', cursor: 'pointer' }}>
+              <ArrowUpCircle size={24} color="#F87171" style={{ marginBottom: 8 }} />
+              <p style={{ fontWeight: 700, fontSize: 15, color: '#F87171', margin: '0 0 2px' }}>Vender</p>
+              <p style={{ fontSize: 11, color: 'var(--t3)', margin: 0 }}>Ordem market imediata</p>
+            </button>
+          </div>
+
+          {/* Orders history */}
+          <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 18, overflow: 'hidden' }}>
+            <div style={{ padding: '14px 20px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <p style={{ fontWeight: 700, fontSize: 14, color: 'var(--t1)', margin: 0 }}>Histórico de Ordens</p>
+              <span style={{ fontSize: 12, color: 'var(--t3)' }}>{store.tradeOrders.length} ordens</span>
+            </div>
+            {store.tradeOrders.map((o, i) => {
+              const color = { BTC: '#F7931A', ETH: '#627EEA', SOL: '#9945FF', USDT: '#26A17B' }[o.symbol] || 'var(--accent)'
+              return (
+                <div key={o.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 20px', borderBottom: i < store.tradeOrders.length - 1 ? '1px solid var(--border)' : 'none' }}>
+                  <div style={{ width: 36, height: 36, borderRadius: 10, background: `${color}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    {o.side === 'BUY'
+                      ? <ArrowDownCircle size={18} color={color} />
+                      : <ArrowUpCircle size={18} color="#F87171" />}
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
+                      <p style={{ fontSize: 13, fontWeight: 700, color: 'var(--t1)', margin: 0 }}>{o.side === 'BUY' ? 'Compra' : 'Venda'} {o.symbol}</p>
+                      <span style={{ fontSize: 10, fontWeight: 700, color: o.status === 'FILLED' ? 'var(--accent)' : o.status === 'CANCELLED' ? 'var(--t3)' : '#F59E0B', background: o.status === 'FILLED' ? 'rgba(0,229,153,0.1)' : o.status === 'CANCELLED' ? 'var(--surface-2)' : 'rgba(245,158,11,0.1)', borderRadius: 5, padding: '1px 6px' }}>{o.status}</span>
+                    </div>
+                    <p style={{ fontSize: 11, color: 'var(--t3)', margin: 0 }}>{o.amount} {o.symbol} @ {fmt(o.price)}</p>
+                  </div>
+                  <span style={{ fontFamily: 'DM Mono, monospace', fontSize: 13, fontWeight: 700, color: o.side === 'BUY' ? '#F87171' : 'var(--accent)' }}>
+                    {o.side === 'BUY' ? '-' : '+'}{fmt(o.total)}
+                  </span>
+                </div>
+              )
+            })}
+          </div>
         </div>
       )}
 

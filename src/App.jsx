@@ -32,8 +32,7 @@ export default function App() {
   const dispatch = useCallback((action, data) => {
     setStore(prev => {
       try {
-        const next = simulate(prev, action, data)
-        return next
+        return simulate(prev, action, data)
       } catch (e) {
         toast(e.message, 'error')
         return prev

@@ -148,18 +148,117 @@ export function buildStore() {
     invoices:         [],
     payments:         [],
     pixKeys:          [{ id:uid(), type:'EMAIL', key:'rafael@zetta.bank', createdAt:daysAgo(30) }],
-    compliance:       [],
-    preRegistrations: [],
-    auditLogs:        [],
+    compliance:       { casesOpen:2, casesClosed:18, casesEscalated:1, events:[] },
+    preRegistrations: [
+      { id:uid(), name:'Ana Costa',       email:'ana@startup.com',    plan:'BUSINESS',     status:'pending',  createdAt:daysAgo(3) },
+      { id:uid(), name:'Dubai Corp LLC',  email:'ops@dubaicorp.ae',   plan:'INSTITUTIONAL',status:'verified', createdAt:daysAgo(7) },
+      { id:uid(), name:'João Freitas',    email:'joao@gmail.com',     plan:'RETAIL',       status:'pending',  createdAt:daysAgo(1) },
+    ],
+    auditLogs: [
+      { id:uid(), action:'AUTH_LOGIN_SUCCESS', entityType:'USER', details:{ ip:'177.10.20.1' }, ts:daysAgo(0,1) },
+      { id:uid(), action:'PIX_SEND',           entityType:'TRANSACTION', details:{ amount:4590 },  ts:daysAgo(0,2) },
+      { id:uid(), action:'CARD_AUTHORIZE',     entityType:'CARD',        details:{ merchant:'iFood' }, ts:daysAgo(0,3) },
+      { id:uid(), action:'KYC_UPGRADE',        entityType:'USER',        details:{ level:'FULL' }, ts:daysAgo(1) },
+      { id:uid(), action:'COMPLIANCE_CASE',    entityType:'COMPLIANCE',  details:{ reason:'aml' }, ts:daysAgo(2) },
+    ],
 
     observability: {
       uptime:          '99.98%',
       latencyP99:      42,
       pendingWebhooks: 1,
-      reconcilePending:0,
+      reconcilePending:3,
       retries:         2,
       traceId:         uid(),
     },
+
+    /* ── Reconciliação ──────────────────────────────── */
+    reconcile: {
+      summary: { pix:2, payment:1, card:0, webhook:1 },
+      pending: [
+        { id:uid(), type:'pix',     amount:45000,  desc:'PIX pendente (45min)',  createdAt:daysAgo(0,1),  status:'PENDING' },
+        { id:uid(), type:'payment', amount:120000, desc:'Boleto pendente (2h)',  createdAt:daysAgo(0,2),  status:'PENDING' },
+        { id:uid(), type:'pix',     amount:8800,   desc:'PIX pendente (3h)',     createdAt:daysAgo(0,3),  status:'PENDING' },
+        { id:uid(), type:'webhook', amount:0,      desc:'Webhook sem entrega',   createdAt:daysAgo(0,5),  status:'DEAD' },
+      ],
+    },
+
+    /* ── Alertas ────────────────────────────────────── */
+    alerts: {
+      thresholds: { pixPending:10, paymentPending:5, cardPending:10, txHold:30, webhookDead:5 },
+      last: [
+        { type:'PIX_PENDING',        value:2, threshold:10, status:'OK',   checkedAt:daysAgo(0,0.5) },
+        { type:'PAYMENT_PENDING',    value:1, threshold:5,  status:'OK',   checkedAt:daysAgo(0,0.5) },
+        { type:'CARD_PENDING',       value:0, threshold:10, status:'OK',   checkedAt:daysAgo(0,0.5) },
+        { type:'WEBHOOK_RETRY_DEAD', value:1, threshold:5,  status:'OK',   checkedAt:daysAgo(0,0.5) },
+        { type:'TX_HOLD',            value:0, threshold:30, status:'OK',   checkedAt:daysAgo(0,0.5) },
+      ],
+    },
+
+    /* ── RBAC / Roles ───────────────────────────────── */
+    roles: [
+      { id:uid(), name:'ADMIN',       description:'Acesso total ao sistema',             usersCount:2, createdAt:daysAgo(180) },
+      { id:uid(), name:'COMPLIANCE',  description:'Análise de compliance e AML/KYT',     usersCount:3, createdAt:daysAgo(180) },
+      { id:uid(), name:'TRADER',      description:'Operações de trading e cripto',        usersCount:5, createdAt:daysAgo(90) },
+      { id:uid(), name:'SUPPORT',     description:'Suporte ao cliente — leitura',         usersCount:8, createdAt:daysAgo(60) },
+      { id:uid(), name:'RISK',        description:'Gestão de risco e limites',            usersCount:2, createdAt:daysAgo(45) },
+    ],
+    userRoles: [
+      { userId:'USR-001', userName:'Rafael Mendonça',  roleName:'ADMIN',      assignedAt:daysAgo(90),  assignedBy:'SYSTEM' },
+      { userId:'USR-002', userName:'Ana Costa',         roleName:'COMPLIANCE', assignedAt:daysAgo(60),  assignedBy:'rafael@zetta.bank' },
+      { userId:'USR-003', userName:'Lucas Almeida',     roleName:'TRADER',     assignedAt:daysAgo(30),  assignedBy:'rafael@zetta.bank' },
+    ],
+    separationRules: [
+      { id:uid(), roleA:'ADMIN',      roleB:'TRADER',     reason:'Segregação de funções regulatória', createdAt:daysAgo(180) },
+      { id:uid(), roleA:'COMPLIANCE', roleB:'TRADER',     reason:'Independência de compliance',       createdAt:daysAgo(90) },
+    ],
+
+    /* ── Precificação avançada ──────────────────────── */
+    pricingVersions: [
+      { id:uid(), version:'v3.0', status:'ACTIVE',   notes:'Tarifas Dubai-ready',     createdAt:daysAgo(30),  activatedAt:daysAgo(30) },
+      { id:uid(), version:'v2.5', status:'ARCHIVED',  notes:'Ajuste de spread cripto', createdAt:daysAgo(90),  activatedAt:daysAgo(90) },
+      { id:uid(), version:'v2.0', status:'ARCHIVED',  notes:'Versão de lançamento',   createdAt:daysAgo(180), activatedAt:daysAgo(180) },
+    ],
+    pricingCampaigns: [
+      { id:uid(), name:'Lançamento Dubai Q1',  status:'ACTIVE', discount:15, startDate:'2026-01-01', endDate:'2026-03-31', planCode:'INSTITUTIONAL', usageCount:4  },
+      { id:uid(), name:'Black Friday 2026',    status:'DRAFT',  discount:20, startDate:'2026-11-25', endDate:'2026-11-30', planCode:'BUSINESS',     usageCount:0  },
+      { id:uid(), name:'Early Adopter 2025',   status:'EXPIRED',discount:30, startDate:'2025-01-01', endDate:'2025-12-31', planCode:'RETAIL',       usageCount:42 },
+    ],
+    pricingRules: [
+      { id:uid(), planCode:'RETAIL',       userType:'PF', featureCode:'PIX_SEND',    feeType:'PERCENT', feeValue:0 },
+      { id:uid(), planCode:'BUSINESS',     userType:'PJ', featureCode:'PIX_SEND',    feeType:'FLAT',    feeValue:0 },
+      { id:uid(), planCode:'BUSINESS',     userType:'PJ', featureCode:'CRYPTO_SWAP', feeType:'PERCENT', feeValue:0.8 },
+      { id:uid(), planCode:'INSTITUTIONAL',userType:'PJ', featureCode:'CRYPTO_SWAP', feeType:'PERCENT', feeValue:0.5 },
+      { id:uid(), planCode:'INSTITUTIONAL',userType:'PJ', featureCode:'PIX_SEND',    feeType:'FLAT',    feeValue:0 },
+      { id:uid(), planCode:'RETAIL',       userType:'PF', featureCode:'CARD_JIT',    feeType:'PERCENT', feeValue:1.5 },
+    ],
+
+    /* ── Perfil regulatório ─────────────────────────── */
+    regulatoryProfile: {
+      userId:       '00000000-0000-0000-0000-000000000001',
+      vasp:         true,
+      fatfRisk:     'LOW',
+      pep:          false,
+      sanctions:    false,
+      jurisdiction: 'BRA',
+      licenseType:  'EMI',
+      lastReviewAt: daysAgo(30),
+      nextReviewAt: new Date(Date.now() + 150*86400000).toISOString(),
+    },
+
+    /* ── Trade Orders ───────────────────────────────── */
+    tradeOrders: [
+      { id:uid(), symbol:'BTC', side:'BUY',  amount:0.0543, price:345000, total:1873350, status:'FILLED',    filledAt:daysAgo(3) },
+      { id:uid(), symbol:'ETH', side:'SELL', amount:0.5,    price:18100,  total:905000,  status:'FILLED',    filledAt:daysAgo(7) },
+      { id:uid(), symbol:'SOL', side:'BUY',  amount:5,      price:850,    total:4250,    status:'CANCELLED', createdAt:daysAgo(5) },
+      { id:uid(), symbol:'BTC', side:'SELL', amount:0.02,   price:340000, total:680000,  status:'FILLED',    filledAt:daysAgo(12) },
+    ],
+
+    /* ── Conversion Audits ──────────────────────────── */
+    conversionAudits: [
+      { id:uid(), trigger:'PIX_RECEIVE', from:'USDT', to:'BRL',  amount:100,   converted:57224, rate:572.24,   createdAt:daysAgo(2) },
+      { id:uid(), trigger:'CARD_JIT',    from:'BTC',  to:'BRL',  amount:0.001, converted:34582, rate:34582000, createdAt:daysAgo(4) },
+      { id:uid(), trigger:'PIX_RECEIVE', from:'USDT', to:'BRL',  amount:500,   converted:286120,rate:572.24,   createdAt:daysAgo(6) },
+    ],
   }
 }
 
@@ -491,12 +590,158 @@ export function simulate(store, action, data = {}) {
       break
     }
 
+    /* ── Reconciliação ──────────────────── */
+    case 'reconcile_summary': {
+      msg = `Reconciliação: ${s.reconcile.summary.pix} PIX, ${s.reconcile.summary.payment} boletos pendentes`
+      break
+    }
+    case 'reconcile_resolve': {
+      const idx = s.reconcile.pending.findIndex(p => p.id === data.pendingId)
+      if (idx >= 0) {
+        s.reconcile.pending.splice(idx, 1)
+        const type = data.pendingId ? s.reconcile.summary : null
+        if (s.reconcile.summary.pix   > 0) s.reconcile.summary.pix--
+      } else {
+        s.reconcile.pending.shift()
+      }
+      s.observability.reconcilePending = s.reconcile.pending.length
+      msg = `Pendência resolvida manualmente`
+      break
+    }
+
+    /* ── Alertas ────────────────────────── */
+    case 'alerts_check': {
+      s.alerts.last = s.alerts.last.map(a => ({ ...a, checkedAt: now.toISOString() }))
+      msg = `Check de alertas: todos os ${s.alerts.last.length} thresholds OK`
+      break
+    }
+    case 'alerts_update_threshold': {
+      const key = data.type || 'pixPending'
+      s.alerts.thresholds[key] = Number(data.value || 10)
+      msg = `Threshold ${key} atualizado para ${data.value}`
+      break
+    }
+
+    /* ── RBAC / Roles ───────────────────── */
+    case 'role_create': {
+      const newRole = { id:uid(), name:(data.name||'NOVO_ROLE').toUpperCase(), description:data.description||'', usersCount:0, createdAt:now.toISOString() }
+      s.roles.push(newRole)
+      msg = `Role ${newRole.name} criada`
+      break
+    }
+    case 'role_assign': {
+      s.userRoles.push({ userId:data.userId||uid(), userName:data.userName||'Usuário', roleName:data.roleName||'SUPPORT', assignedAt:now.toISOString(), assignedBy:s.user.email })
+      const r = s.roles.find(r => r.name === (data.roleName||'SUPPORT'))
+      if (r) r.usersCount++
+      msg = `Role ${data.roleName} atribuída ao usuário ${data.userId}`
+      break
+    }
+    case 'role_remove': {
+      const bi = s.userRoles.findIndex(ur => ur.userId === data.userId && ur.roleName === data.roleName)
+      if (bi >= 0) {
+        s.userRoles.splice(bi, 1)
+        const r = s.roles.find(r => r.name === data.roleName)
+        if (r && r.usersCount > 0) r.usersCount--
+      }
+      msg = `Role ${data.roleName} removida do usuário ${data.userId}`
+      break
+    }
+    case 'role_separation_add': {
+      s.separationRules.push({ id:uid(), roleA:data.roleA||'ADMIN', roleB:data.roleB||'TRADER', reason:data.reason||'Segregação de funções', createdAt:now.toISOString() })
+      msg = `Regra de separação ${data.roleA}↔${data.roleB} criada`
+      break
+    }
+    case 'role_separation_remove': {
+      const ri = s.separationRules.findIndex(r => r.roleA === data.roleA && r.roleB === data.roleB)
+      if (ri >= 0) s.separationRules.splice(ri, 1)
+      msg = `Regra de separação removida`
+      break
+    }
+
+    /* ── Perfil Regulatório ──────────────── */
+    case 'regulatory_profile_update': {
+      Object.assign(s.regulatoryProfile, {
+        fatfRisk:     data.fatfRisk     || s.regulatoryProfile.fatfRisk,
+        pep:          data.pep === 'true',
+        sanctions:    data.sanctions === 'true',
+        jurisdiction: data.jurisdiction || s.regulatoryProfile.jurisdiction,
+        licenseType:  data.licenseType  || s.regulatoryProfile.licenseType,
+        vasp:         data.vasp !== 'false',
+        lastReviewAt: now.toISOString(),
+        nextReviewAt: new Date(Date.now() + 180*86400000).toISOString(),
+      })
+      msg = `Perfil regulatório atualizado — risco ${s.regulatoryProfile.fatfRisk}`
+      break
+    }
+
+    /* ── Pricing avançado ───────────────── */
+    case 'pricing_version_create': {
+      const ver = { id:uid(), version:data.version||`v${Date.now().toString().slice(-4)}`, status:'DRAFT', notes:data.notes||'', createdAt:now.toISOString() }
+      s.pricingVersions.unshift(ver)
+      msg = `Versão de pricing ${ver.version} criada (DRAFT)`
+      break
+    }
+    case 'pricing_version_activate': {
+      s.pricingVersions.forEach(v => { if (v.status === 'ACTIVE') v.status = 'ARCHIVED' })
+      const v = s.pricingVersions.find(v => v.version === data.version) || s.pricingVersions[0]
+      if (v) { v.status = 'ACTIVE'; v.activatedAt = now.toISOString() }
+      msg = `Versão ${v?.version} ativada`
+      break
+    }
+    case 'pricing_rule_create': {
+      s.pricingRules.push({ id:uid(), planCode:data.planCode||'BUSINESS', userType:data.userType||'PJ', featureCode:data.featureCode||'PIX_SEND', feeType:data.feeType||'FLAT', feeValue:Number(data.feeValue||0) })
+      msg = `Regra de pricing criada para ${data.planCode}/${data.featureCode}`
+      break
+    }
+    case 'pricing_campaign_create': {
+      s.pricingCampaigns.push({ id:uid(), name:data.name||'Nova Campanha', status:'DRAFT', discount:Number(data.discount||10), startDate:data.startDate||'2026-01-01', endDate:data.endDate||'2026-12-31', planCode:data.planCode||'BUSINESS', usageCount:0 })
+      msg = `Campanha "${data.name}" criada`
+      break
+    }
+    case 'pricing_campaign_update': {
+      const camp = s.pricingCampaigns.find(c => c.id === data.campaignId) || s.pricingCampaigns[0]
+      if (camp) { camp.status = data.status || camp.status; camp.discount = Number(data.discount || camp.discount) }
+      msg = `Campanha atualizada: status ${camp?.status}`
+      break
+    }
+
+    /* ── Trade Orders ───────────────────── */
+    case 'trade_order_create': {
+      const sym = data.symbol || 'BTC'
+      const coinPrice = s.pricingRate[sym] || 100
+      const amt = Number(data.amount || 0.001)
+      const total = Math.round(amt * coinPrice)
+      const order = { id:uid(), symbol:sym, side:data.side||'BUY', amount:amt, price:coinPrice, total, status:'FILLED', filledAt:now.toISOString() }
+      s.tradeOrders.unshift(order)
+      if (data.side === 'SELL') {
+        const coin = s.crypto.find(c => c.symbol === sym)
+        if (coin && coin.amount >= amt) { coin.amount -= amt; s.accounts.main.balance += total }
+      } else {
+        const coin = s.crypto.find(c => c.symbol === sym)
+        if (coin) coin.amount += amt
+        s.accounts.main.balance -= total
+      }
+      msg = `Ordem ${data.side} ${amt} ${sym} @ ${fmtBRL(coinPrice)} executada`
+      break
+    }
+    case 'trade_order_cancel': {
+      const o = s.tradeOrders.find(o => o.status !== 'FILLED' && o.status !== 'CANCELLED')
+      if (o) o.status = 'CANCELLED'
+      msg = `Ordem cancelada`
+      break
+    }
+
     default:
       msg = `Ação "${action}" executada`
-      details = { action, ts:now.toISOString(), demo:true }
   }
 
-  return { store:s, msg, details }
+  /* Audit trail automático */
+  if (msg && action !== 'obs_summary' && action !== 'reconcile_summary' && action !== 'alerts_check') {
+    s.auditLogs.unshift({ id:uid(), action:action.toUpperCase(), entityType:'SYSTEM', details:data, ts:now.toISOString() })
+    if (s.auditLogs.length > 50) s.auditLogs.pop()
+  }
+
+  return s
 }
 
 /* ── Helpers ────────────────────────────────────────── */
