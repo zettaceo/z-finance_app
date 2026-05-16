@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Send, QrCode, FileText, ArrowLeftRight, Globe, Calendar, CheckCircle, XCircle, Plus } from 'lucide-react'
+import { Send, QrCode, FileText, ArrowLeftRight, Globe, Calendar, CheckCircle, XCircle, Plus, Plane } from 'lucide-react'
 import { useApp } from '../App.jsx'
 import SimModal from '../components/SimModal.jsx'
 
@@ -180,6 +180,53 @@ const CATEGORIES = [
       },
     ]
   },
+  {
+    id: 'pixintl', label: 'PIX Intl', icon: Plane, color: '#F59E0B',
+    actions: [
+      {
+        label: 'PIX → USD (EUA)', sub: 'Conta americana em dólares',
+        modal: {
+          title: 'PIX Internacional → USD', action: 'pix_international', successMsg: 'PIX Internacional enviado!',
+          description: '🇧🇷→🇺🇸  PIX em BRL convertido e entregue em USD. Taxa 1.5% · Liquidação em até 1h.',
+          fields: [
+            { key: 'amountBRL', label: 'Valor em BRL (centavos)', type: 'number', default: 578000, hint: 'R$ 5.780,00 → aprox. USD 1.000,00 (descontando taxa 1.5%)' },
+            { key: 'destination', label: 'Moeda destino', type: 'select', options: [{ value: 'USD', label: '🇺🇸 USD — Dólar Americano' }] },
+            { key: 'recipient', label: 'Beneficiário', type: 'text', default: 'John Smith — Chase Bank' },
+            { key: 'swiftOrAccount', label: 'SWIFT / Account', type: 'text', default: 'CHASUS33 — 4532xxxx' },
+          ],
+          submitLabel: 'Enviar PIX Internacional',
+        }
+      },
+      {
+        label: 'PIX → AED (Dubai)', sub: 'Conta Dubai em Dirhams',
+        modal: {
+          title: 'PIX Internacional → AED', action: 'pix_international', successMsg: 'PIX Internacional enviado!',
+          description: '🇧🇷→🇦🇪  PIX em BRL convertido e entregue em AED. Taxa 1.5% · Liquidação em até 30min.',
+          fields: [
+            { key: 'amountBRL', label: 'Valor em BRL (centavos)', type: 'number', default: 158000, hint: 'R$ 1.580,00 → aprox. AED 1.000,00 (descontando taxa 1.5%)' },
+            { key: 'destination', label: 'Moeda destino', type: 'select', options: [{ value: 'AED', label: '🇦🇪 AED — Dirham dos Emirados' }] },
+            { key: 'recipient', label: 'Beneficiário', type: 'text', default: 'Dubai Corp LLC' },
+            { key: 'iban', label: 'IBAN Dubai', type: 'text', default: 'AE070331234567890123456' },
+          ],
+          submitLabel: 'Enviar para Dubai',
+        }
+      },
+      {
+        label: 'PIX → EUR (Europa)', sub: 'Conta europeia em Euros',
+        modal: {
+          title: 'PIX Internacional → EUR', action: 'pix_international', successMsg: 'PIX Internacional enviado!',
+          description: '🇧🇷→🇪🇺  PIX em BRL convertido e entregue em EUR via SEPA. Taxa 1.5% · Liquidação D+1.',
+          fields: [
+            { key: 'amountBRL', label: 'Valor em BRL (centavos)', type: 'number', default: 624000, hint: 'R$ 6.240,00 → aprox. EUR 1.000,00 (descontando taxa 1.5%)' },
+            { key: 'destination', label: 'Moeda destino', type: 'select', options: [{ value: 'EUR', label: '🇪🇺 EUR — Euro' }] },
+            { key: 'recipient', label: 'Beneficiário', type: 'text', default: 'Maria García' },
+            { key: 'iban', label: 'IBAN Europa', type: 'text', default: 'ES91 2100 0418 4502 0005 1332' },
+          ],
+          submitLabel: 'Enviar para Europa',
+        }
+      },
+    ]
+  },
 ]
 
 export default function Mover() {
@@ -279,6 +326,62 @@ export default function Mover() {
           </button>
         ))}
       </div>
+
+      {/* PIX Internacional info */}
+      {activeCategory === 'pixintl' && (
+        <div style={{ marginTop: 16 }}>
+          {/* Breakdown explainer */}
+          <div style={{
+            background: 'linear-gradient(135deg, rgba(245,158,11,0.08), rgba(245,158,11,0.03))',
+            border: '1px solid rgba(245,158,11,0.2)',
+            borderRadius: 16, padding: '16px',
+          }}>
+            <p style={{ fontWeight: 700, fontSize: 13, color: '#F59E0B', margin: '0 0 12px' }}>
+              Como funciona o PIX Internacional
+            </p>
+            {[
+              { icon: '⚡', text: 'Você envia PIX em BRL da sua conta Z-Finance' },
+              { icon: '🔄', text: 'Conversão automática ao câmbio do momento (spread 0%)' },
+              { icon: '💸', text: 'Taxa de 1.5% sobre o valor convertido' },
+              { icon: '🌍', text: 'Destinatário recebe em USD, AED ou EUR em até 1h' },
+            ].map(({ icon, text }) => (
+              <div key={text} style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+                <span style={{ fontSize: 16, flexShrink: 0 }}>{icon}</span>
+                <span style={{ fontSize: 12, color: 'var(--t2)', lineHeight: 1.4 }}>{text}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* Supported countries */}
+          <div style={{ marginTop: 12, background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, overflow: 'hidden' }}>
+            <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border)' }}>
+              <p style={{ fontWeight: 700, fontSize: 13, color: 'var(--t1)', margin: 0 }}>Países suportados</p>
+            </div>
+            {[
+              { flag: '🇺🇸', name: 'Estados Unidos', cur: 'USD', time: '~1h', status: 'live' },
+              { flag: '🇦🇪', name: 'Emirados Árabes', cur: 'AED', time: '~30min', status: 'live' },
+              { flag: '🇪🇺', name: 'União Europeia', cur: 'EUR', time: 'D+1', status: 'live' },
+              { flag: '🇬🇧', name: 'Reino Unido', cur: 'GBP', time: 'D+1', status: 'soon' },
+              { flag: '🇨🇳', name: 'China', cur: 'CNY', time: 'D+2', status: 'soon' },
+            ].map(({ flag, name, cur, time, status }) => (
+              <div key={cur} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderBottom: '1px solid var(--border)' }}>
+                <span style={{ fontSize: 20, flexShrink: 0 }}>{flag}</span>
+                <div style={{ flex: 1 }}>
+                  <p style={{ fontWeight: 600, fontSize: 13, color: 'var(--t1)', margin: '0 0 1px' }}>{name}</p>
+                  <p style={{ fontSize: 11, color: 'var(--t3)', margin: 0 }}>{cur} · {time}</p>
+                </div>
+                <span style={{
+                  fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 6,
+                  color: status === 'live' ? '#34D399' : 'var(--t3)',
+                  background: status === 'live' ? 'rgba(52,211,153,0.15)' : 'var(--surface-2)',
+                }}>
+                  {status === 'live' ? '● LIVE' : '⏱ EM BREVE'}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* PIX keys summary */}
       {activeCategory === 'pix' && (

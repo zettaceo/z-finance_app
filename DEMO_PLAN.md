@@ -93,15 +93,15 @@ Tarefas:
 
 ### ETAPA 5 — PIX Internacional
 **Impacto:** Médio-Alto — diferencial competitivo principal  
-**Status:** ⏳ Pendente
+**Status:** ✅ Concluída
 
 Tarefas:
-- [ ] Adicionar categoria "PIX Internacional" no Mover
-- [ ] Fluxo: PIX (BRL) → conversão → destino (USD/AED/EUR)
-- [ ] Mock de países/destinos suportados
-- [ ] Mostrar taxa de câmbio ao vivo no fluxo
-- [ ] Action: `pix_international` no simulate()
-- [ ] Confirmação com breakdown: valor enviado, taxa, recebido
+- [x] Adicionar categoria "PIX Internacional" no Mover (aba "PIX Intl" com ícone Plane)
+- [x] Fluxo: PIX (BRL) → conversão → destino (USD/AED/EUR) com 3 ações dedicadas
+- [x] Mock de países/destinos suportados (5 países, 3 live + 2 em breve)
+- [x] Mostrar taxa de câmbio ao vivo no fluxo (hint com preview de conversão nos campos)
+- [x] Action: `pix_international` no simulate() com taxa 1.5%, breakdown no msg/details
+- [x] Painel explicativo "Como funciona" + lista de países com status e tempo de liquidação
 
 ---
 
@@ -188,7 +188,7 @@ Tarefas:
 | 2 | Conta AED | ✅ Concluída |
 | 3 | Página de Crédito | ✅ Concluída |
 | 4 | Z-Pass | ✅ Concluída |
-| 5 | PIX Internacional | ⏳ Pendente |
+| 5 | PIX Internacional | ✅ Concluída |
 | 6 | Zion AI Proativo | ⏳ Pendente |
 | 7 | Tiers de Cartão | ⏳ Pendente |
 | 8 | Centro de Notificações | ⏳ Pendente |

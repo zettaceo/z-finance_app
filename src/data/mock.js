@@ -753,6 +753,21 @@ export function simulate(store, action, data = {}) {
       break
     }
 
+    /* ── PIX Internacional ─────────────── */
+    case 'pix_international': {
+      const amtBRL = cents(data.amountBRL || 100)
+      const dest   = data.destination || 'USD'
+      const fxRate = dest === 'USD' ? s.market.USD.rate : dest === 'AED' ? s.market.AED.rate : dest === 'EUR' ? s.market.EUR.rate : s.market.USD.rate
+      const fee    = Math.round(amtBRL * 0.015)  // 1.5% fee
+      const netBRL = amtBRL - fee
+      const received = Math.round(netBRL * 100 / fxRate)
+      s.accounts.main.balance -= amtBRL
+      s.transactions.unshift({ id:uid(), type:'TRANSFER_OUT', amount:-amtBRL, desc:`PIX Intl → ${dest} — ${data.recipient||'Destinatário'}`, at:now.toISOString(), status:'CONFIRMED', category:'PIX Internacional' })
+      msg = `PIX Internacional enviado: ${fmtBRL(amtBRL)} → ${dest} ${(received/100).toFixed(2)}`
+      details = { sent:fmtBRL(amtBRL), fee:fmtBRL(fee), netBRL:fmtBRL(netBRL), received:`${dest} ${(received/100).toFixed(2)}`, rate:`${(fxRate/100).toFixed(2)} BRL/${dest}`, status:'CONFIRMED', txId:`PIXINTL-${uid()}` }
+      break
+    }
+
     /* ── Crédito ───────────────────────── */
     case 'credit_simulate': {
       const amt  = cents(data.amount || 500)
