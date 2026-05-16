@@ -107,17 +107,18 @@ Tarefas:
 
 ### ETAPA 6 — Zion AI com Sugestões Proativas
 **Impacto:** Médio-Alto — transforma de chatbot em assistente financeiro real  
-**Status:** ⏳ Pendente
+**Status:** ✅ Concluída
 
 Tarefas:
-- [ ] Painel inicial do Zion com 3 cards de insight proativo:
-  - "Seu BTC valorizou R$ 1.240 hoje (+3.2%)"
-  - "R$ 8.000 parados na conta. Quer rentabilizar?"
-  - "Fatura de R$ 1.500 vence em 3 dias"
-- [ ] Comandos rápidos (chips clicáveis): "Ver saldo", "Enviar PIX", "Cotar câmbio"
-- [ ] Respostas contextuais melhoradas (usar dados reais do store)
-- [ ] Animação de "pensando" mais elaborada
-- [ ] Histórico de conversa persistente na sessão
+- [x] Painel inicial com 3 cards de insight proativo (computados do store real):
+  - BTC valorizou/caiu R$ X hoje (+3.2%)
+  - R$ X parados na conta → sugestão de rentabilizar
+  - Parcela de crédito em N dias
+- [x] Quick chips clicáveis: Ver saldo · Portfólio · Câmbio · PIX · Crédito · Z-Pass
+- [x] Respostas contextuais expandidas: saldo multi-moeda (BRL/USD/AED), cripto, câmbio
+  live, KYC por persona, crédito/Z-Score, Z-Pass, cartão JIT, PIX Internacional
+- [x] "Analisando dados..." com delay aleatório 600-1000ms + nome do usuário na saudação
+- [x] Histórico de conversa persistente em sessionStorage (até 20 mensagens)
 
 ---
 
@@ -189,7 +190,7 @@ Tarefas:
 | 3 | Página de Crédito | ✅ Concluída |
 | 4 | Z-Pass | ✅ Concluída |
 | 5 | PIX Internacional | ✅ Concluída |
-| 6 | Zion AI Proativo | ⏳ Pendente |
+| 6 | Zion AI Proativo | ✅ Concluída |
 | 7 | Tiers de Cartão | ⏳ Pendente |
 | 8 | Centro de Notificações | ⏳ Pendente |
 | 9 | Welcome / Onboarding | ⏳ Pendente |
