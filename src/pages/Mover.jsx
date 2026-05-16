@@ -122,16 +122,16 @@ const CATEGORIES = [
     id: 'transferencias', label: 'Transferências', icon: ArrowLeftRight, color: '#F59E0B',
     actions: [
       {
-        label: 'Entre Contas', sub: 'BRL ↔ USD ↔ Investimentos',
+        label: 'Entre Contas', sub: 'BRL ↔ USD ↔ AED ↔ Invest',
         modal: {
           title: 'Transferência Interna', action: 'transfer_internal', successMsg: 'Transferência realizada!',
-          description: 'Mova saldo entre suas contas instantaneamente.',
+          description: 'Câmbio automático entre contas multi-moeda. Taxa em tempo real.',
           fields: [
-            { key: 'fromAccount', label: 'Conta de origem', type: 'select', options: [{ value: 'main', label: 'BRL Principal' }, { value: 'usd', label: 'USD Internacional' }, { value: 'invest', label: 'Investimentos' }] },
-            { key: 'toAccount', label: 'Conta de destino', type: 'select', options: [{ value: 'usd', label: 'USD Internacional' }, { value: 'main', label: 'BRL Principal' }, { value: 'invest', label: 'Investimentos' }] },
-            { key: 'amount', label: 'Valor (centavos)', type: 'number', default: 50000 },
+            { key: 'fromAccount', label: 'Conta de origem', type: 'select', options: [{ value: 'main', label: '🇧🇷 BRL Principal' }, { value: 'usd', label: '🇺🇸 USD Internacional' }, { value: 'aed', label: '🇦🇪 AED Dubai' }, { value: 'invest', label: '📈 Investimentos' }] },
+            { key: 'toAccount', label: 'Conta de destino', type: 'select', options: [{ value: 'usd', label: '🇺🇸 USD Internacional' }, { value: 'main', label: '🇧🇷 BRL Principal' }, { value: 'aed', label: '🇦🇪 AED Dubai' }, { value: 'invest', label: '📈 Investimentos' }] },
+            { key: 'amount', label: 'Valor (centavos da moeda de origem)', type: 'number', default: 50000, hint: 'Conversão aplicada automaticamente' },
           ],
-          submitLabel: 'Transferir',
+          submitLabel: 'Converter e Transferir',
         }
       },
       {
@@ -153,16 +153,29 @@ const CATEGORIES = [
     id: 'cambio', label: 'Câmbio', icon: Globe, color: '#60A5FA',
     actions: [
       {
-        label: 'Cotação FX', sub: 'Obter taxa de câmbio',
+        label: 'Cotação FX', sub: 'USD, AED, EUR, GBP',
         modal: {
           title: 'Cotação de Câmbio', action: 'pricing_quote', successMsg: 'Cotação obtida!',
-          description: 'Taxas competitivas sem spread oculto.',
+          description: 'Taxas competitivas sem spread oculto. Acesso a múltiplas moedas globais.',
           fields: [
-            { key: 'from', label: 'Moeda de origem', type: 'select', options: [{ value: 'BRL', label: 'BRL' }, { value: 'USD', label: 'USD' }, { value: 'USDT', label: 'USDT' }] },
-            { key: 'to', label: 'Moeda de destino', type: 'select', options: [{ value: 'USD', label: 'USD' }, { value: 'BRL', label: 'BRL' }, { value: 'BTC', label: 'BTC' }] },
+            { key: 'from', label: 'Moeda de origem', type: 'select', options: [{ value: 'BRL', label: '🇧🇷 BRL' }, { value: 'USD', label: '🇺🇸 USD' }, { value: 'AED', label: '🇦🇪 AED' }, { value: 'USDT', label: '₮ USDT' }] },
+            { key: 'to', label: 'Moeda de destino', type: 'select', options: [{ value: 'USD', label: '🇺🇸 USD' }, { value: 'AED', label: '🇦🇪 AED' }, { value: 'BRL', label: '🇧🇷 BRL' }, { value: 'BTC', label: '₿ BTC' }] },
             { key: 'amount', label: 'Valor (centavos)', type: 'number', default: 100000 },
           ],
           submitLabel: 'Cotar',
+        }
+      },
+      {
+        label: 'PIX → AED', sub: 'Enviar para Dubai instantâneo',
+        modal: {
+          title: 'PIX Internacional → AED', action: 'transfer_internal', successMsg: 'Conversão realizada!',
+          description: 'Converta BRL da sua conta PIX para Dirhams dos Emirados. Taxa: 1 AED ≈ R$ 1,58.',
+          fields: [
+            { key: 'fromAccount', label: 'Origem', type: 'select', options: [{ value: 'main', label: '🇧🇷 Conta BRL' }] },
+            { key: 'toAccount', label: 'Destino', type: 'select', options: [{ value: 'aed', label: '🇦🇪 Conta AED Dubai' }] },
+            { key: 'amount', label: 'Valor em BRL (centavos)', type: 'number', default: 158000, hint: 'R$ 1.580,00 → ≈ AED 1.000,00' },
+          ],
+          submitLabel: 'Converter para AED',
         }
       },
     ]
@@ -170,7 +183,7 @@ const CATEGORIES = [
 ]
 
 export default function Mover() {
-  const { modal, setModal } = useApp()
+  const { store, modal, setModal } = useApp()
   const [activeCategory, setActiveCategory] = useState('pix')
 
   const cat = CATEGORIES.find(c => c.id === activeCategory)
@@ -180,6 +193,35 @@ export default function Mover() {
       <div style={{ marginBottom: 20 }}>
         <h2 style={{ fontSize: 22, fontWeight: 800, fontFamily: 'Syne,sans-serif', color: 'var(--t1)', margin: '0 0 4px' }}>Mover Dinheiro</h2>
         <p style={{ fontSize: 13, color: 'var(--t3)', margin: 0 }}>PIX, pagamentos, cobranças e transferências</p>
+      </div>
+
+      {/* FX Rate strip */}
+      <div style={{
+        display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4, marginBottom: 16,
+      }} className="hide-scroll">
+        {[
+          { cur: 'USD', flag: '🇺🇸', rate: store.market.USD.rate, change: store.market.USD.change },
+          { cur: 'AED', flag: '🇦🇪', rate: store.market.AED.rate, change: store.market.AED.change },
+          { cur: 'EUR', flag: '🇪🇺', rate: store.market.EUR.rate, change: store.market.EUR.change },
+          { cur: 'GBP', flag: '🇬🇧', rate: store.market.GBP.rate, change: store.market.GBP.change },
+        ].map(({ cur, flag, rate, change }) => (
+          <div key={cur} style={{
+            flexShrink: 0, background: 'var(--surface)', border: '1px solid var(--border)',
+            borderRadius: 12, padding: '8px 14px',
+            display: 'flex', alignItems: 'center', gap: 8,
+          }}>
+            <span style={{ fontSize: 16 }}>{flag}</span>
+            <div>
+              <p style={{ fontSize: 10, color: 'var(--t3)', margin: '0 0 1px', fontWeight: 600 }}>{cur}/BRL</p>
+              <p style={{ fontFamily: 'DM Mono, monospace', fontSize: 13, fontWeight: 700, color: 'var(--t1)', margin: 0 }}>
+                R$ {(rate / 100).toFixed(2)}
+                <span style={{ fontSize: 10, marginLeft: 4, color: change >= 0 ? 'var(--accent)' : '#F87171' }}>
+                  {change >= 0 ? '+' : ''}{change.toFixed(1)}%
+                </span>
+              </p>
+            </div>
+          </div>
+        ))}
       </div>
 
       {/* Category tabs */}

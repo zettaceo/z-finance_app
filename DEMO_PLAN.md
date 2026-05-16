@@ -43,14 +43,16 @@ Tarefas:
 
 ### ETAPA 2 — Conta AED (Dirham dos Emirados)
 **Impacto:** Alto — valida narrativa Dubai imediatamente  
-**Status:** ⏳ Pendente
+**Status:** ✅ Concluída
 
 Tarefas:
-- [ ] Adicionar `aed` em `store.accounts` no mock (saldo: AED 8.200)
-- [ ] Adicionar AED nas abas de conta da Home (BRL / USD / AED / Invest)
-- [ ] Mostrar taxa AED/BRL no bloco de câmbio do Mover
-- [ ] Adicionar `aed` como opção nas transferências internas
-- [ ] Flag 🇦🇪 e formatação correta (AED X.XXX,XX)
+- [x] Adicionar `aed` em `store.accounts` no mock (saldo: AED 8.200)
+- [x] Adicionar AED nas abas de conta da Home (🇧🇷 BRL / 🇺🇸 USD / 🇦🇪 AED / 📈 Invest)
+- [x] Mostrar taxa AED/BRL no bloco de câmbio do Mover (FX strip com USD/AED/EUR/GBP)
+- [x] Adicionar `aed` como opção nas transferências internas (com conversão automática)
+- [x] Flag 🇦🇪 e formatação correta (AED X.XXX,XX)
+- [x] Ação "PIX → AED" na categoria Câmbio do Mover
+- [x] Fix bug: transfer_internal agora aceita fromAccount/toAccount e faz conversão multi-moeda
 
 ---
 
@@ -183,7 +185,7 @@ Tarefas:
 | Etapa | Descrição | Status |
 |-------|-----------|--------|
 | 1 | Switcher de Persona | ✅ Concluída |
-| 2 | Conta AED | ⏳ Pendente |
+| 2 | Conta AED | ✅ Concluída |
 | 3 | Página de Crédito | ⏳ Pendente |
 | 4 | Z-Pass | ⏳ Pendente |
 | 5 | PIX Internacional | ⏳ Pendente |

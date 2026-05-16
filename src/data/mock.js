@@ -81,6 +81,14 @@ export function buildStore() {
         holds:    0,
         iban:     'ZF •••• •••• 3309',
       },
+      aed: {
+        id:       '00000000-0000-0000-0000-000000000013',
+        label:    'Conta AED 🇦🇪',
+        currency: 'AED',
+        balance:  820000,   // AED 8.200,00
+        holds:    0,
+        iban:     'ZF •••• •••• 7714',
+      },
     },
 
     crypto: [
@@ -100,6 +108,7 @@ export function buildStore() {
       USD: { rate:578, change:0.3 },
       EUR: { rate:624, change:-0.2 },
       GBP: { rate:731, change:0.1 },
+      AED: { rate:158, change:0.1 },  // 1 AED ≈ R$ 1,58
     },
 
     transactions: [
@@ -357,14 +366,29 @@ export function simulate(store, action, data = {}) {
 
     /* ── Transferências ─────────────────── */
     case 'transfer_internal': {
+      const from = data.fromAccount || data.from || 'main'
+      const to   = data.toAccount   || data.to   || 'invest'
+      const fromAcc = s.accounts[from]
+      const toAcc   = s.accounts[to]
+      if (!fromAcc || !toAcc) { msg = 'Conta inválida'; break }
+
       const amt = cents(data.amount || 300)
-      const from = data.from || 'main'
-      const to   = data.to   || 'invest'
-      if (s.accounts[from]) s.accounts[from].balance -= amt
-      if (s.accounts[to])   s.accounts[to].balance   += amt
-      s.transactions.unshift({ id:uid(), type:'TRANSFER_OUT', amount:-amt, desc:`Transferência → ${s.accounts[to]?.label||to}`, at:now.toISOString(), status:'CONFIRMED', category:'Transferência' })
-      msg = `${fmtBRL(amt)} transferidos para ${s.accounts[to]?.label||to}`
-      details = { from, to, amount:fmtBRL(amt), status:'CONFIRMED' }
+      const fxRate = (cur) => cur === 'USD' ? s.market.USD.rate : cur === 'AED' ? s.market.AED.rate : cur === 'EUR' ? s.market.EUR.rate : 100
+
+      let receivedAmt = amt
+      if (fromAcc.currency !== toAcc.currency) {
+        const fromBRL = fromAcc.currency === 'BRL' ? amt : Math.round(amt * fxRate(fromAcc.currency) / 100)
+        receivedAmt   = toAcc.currency   === 'BRL' ? fromBRL : Math.round(fromBRL * 100 / fxRate(toAcc.currency))
+      }
+
+      fromAcc.balance -= amt
+      toAcc.balance   += receivedAmt
+
+      const amtFmt = fromAcc.currency === 'AED' ? `AED ${(amt/100).toFixed(2)}` : fmtBRL(amt)
+      const recFmt = toAcc.currency   === 'AED' ? `AED ${(receivedAmt/100).toFixed(2)}` : fmtBRL(receivedAmt)
+      s.transactions.unshift({ id:uid(), type:'TRANSFER_OUT', amount:-amt, desc:`Câmbio ${fromAcc.currency}→${toAcc.currency}`, at:now.toISOString(), status:'CONFIRMED', category:'Transferência' })
+      msg = `${amtFmt} convertidos → ${recFmt} em ${toAcc.label}`
+      details = { from, to, sent:amtFmt, received:recFmt, status:'CONFIRMED' }
       break
     }
     case 'withdrawal': {

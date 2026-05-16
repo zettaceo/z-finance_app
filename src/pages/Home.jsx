@@ -9,6 +9,7 @@ function fmt(cents, cur = 'BRL') {
   const val = cents / 100
   if (cur === 'BRL') return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val)
   if (cur === 'USD') return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(val)
+  if (cur === 'AED') return `AED ${val.toLocaleString('en-AE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
   return val.toFixed(2)
 }
 
@@ -140,20 +141,24 @@ export default function Home() {
         </div>
 
         {/* Account tabs */}
-        <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
+        <div style={{ display: 'flex', gap: 8, marginBottom: 20, overflowX: 'auto', paddingBottom: 2 }} className="hide-scroll">
           {[
-            { id: 'main', label: 'BRL', color: 'var(--accent)' },
-            { id: 'usd', label: 'USD', color: '#60A5FA' },
-            { id: 'invest', label: 'Invest', color: 'var(--gold)' },
-          ].map(({ id, label, color }) => (
+            { id: 'main',   label: 'BRL',   color: 'var(--accent)', flag: '🇧🇷' },
+            { id: 'usd',    label: 'USD',   color: '#60A5FA',       flag: '🇺🇸' },
+            { id: 'aed',    label: 'AED',   color: '#FBBF24',       flag: '🇦🇪' },
+            { id: 'invest', label: 'Invest', color: 'var(--gold)',  flag: '📈' },
+          ].map(({ id, label, color, flag }) => (
             <button key={id} onClick={() => setActiveAccount(id)} style={{
-              padding: '6px 14px', borderRadius: 20, cursor: 'pointer',
+              flexShrink: 0, padding: '6px 12px', borderRadius: 20, cursor: 'pointer',
               background: activeAccount === id ? `${color}20` : 'transparent',
               border: `1px solid ${activeAccount === id ? `${color}50` : 'var(--border)'}`,
               color: activeAccount === id ? color : 'var(--t3)',
               fontSize: 12, fontWeight: 700,
-              transition: 'all 0.15s',
-            }}>{label}</button>
+              transition: 'all 0.15s', display: 'flex', alignItems: 'center', gap: 4,
+            }}>
+              <span style={{ fontSize: 13 }}>{flag}</span>
+              {label}
+            </button>
           ))}
         </div>
 
