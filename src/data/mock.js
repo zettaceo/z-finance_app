@@ -264,6 +264,28 @@ export function buildStore() {
       { id:uid(), symbol:'BTC', side:'SELL', amount:0.02,   price:340000, total:680000,  status:'FILLED',    filledAt:daysAgo(12) },
     ],
 
+    /* ── Crédito ───────────────────────────────────── */
+    credit: {
+      score:        742,
+      scoreLabel:   'Bom',
+      scoreHistory: [580, 620, 655, 690, 710, 728, 742],
+      limit:        5000000,   // R$ 50.000,00
+      limitUsed:    1200000,   // R$ 12.000,00
+      collateral: {
+        btc:      0.15,
+        usdt:     500,
+        totalBRL: 5900000,
+      },
+      loans: [
+        { id:uid(), type:'PERSONAL', amount:1200000, rate:1.8, months:12, paid:4, status:'ACTIVE', startDate:daysAgo(120), nextDue:new Date(Date.now()+10*86400000).toISOString() },
+      ],
+      offers: [
+        { id:uid(), type:'PERSONAL',   limit:2000000,  rate:1.8, months:24, collateral:null  },
+        { id:uid(), type:'CRYPTO_COL', limit:3000000,  rate:1.2, months:12, collateral:'BTC' },
+        { id:uid(), type:'BUSINESS',   limit:10000000, rate:2.1, months:36, collateral:null  },
+      ],
+    },
+
     /* ── Conversion Audits ──────────────────────────── */
     conversionAudits: [
       { id:uid(), trigger:'PIX_RECEIVE', from:'USDT', to:'BRL',  amount:100,   converted:57224, rate:572.24,   createdAt:daysAgo(2) },
@@ -728,6 +750,40 @@ export function simulate(store, action, data = {}) {
       const camp = s.pricingCampaigns.find(c => c.id === data.campaignId) || s.pricingCampaigns[0]
       if (camp) { camp.status = data.status || camp.status; camp.discount = Number(data.discount || camp.discount) }
       msg = `Campanha atualizada: status ${camp?.status}`
+      break
+    }
+
+    /* ── Crédito ───────────────────────── */
+    case 'credit_simulate': {
+      const amt  = cents(data.amount || 500)
+      const rate = Number(data.rate  || 1.8)
+      const mo   = Number(data.months || 12)
+      const monthly = Math.round(amt * (rate/100) / (1 - Math.pow(1 + rate/100, -mo)))
+      msg = `Simulação: ${fmtBRL(monthly)}/mês por ${mo} meses`
+      details = { amount:fmtBRL(amt), rate:`${rate}% a.m.`, months:mo, monthly:fmtBRL(monthly), total:fmtBRL(monthly*mo), interest:fmtBRL(monthly*mo - amt) }
+      break
+    }
+    case 'credit_request': {
+      const amt = cents(data.amount || 500)
+      if (amt > s.credit.limit - s.credit.limitUsed) { msg = 'Limite insuficiente'; break }
+      const loan = { id:uid(), type:data.type||'PERSONAL', amount:amt, rate:Number(data.rate||1.8), months:Number(data.months||12), paid:0, status:'ACTIVE', startDate:now.toISOString(), nextDue:new Date(Date.now()+30*86400000).toISOString() }
+      s.credit.loans.push(loan)
+      s.credit.limitUsed += amt
+      s.accounts.main.balance += amt
+      s.transactions.unshift({ id:uid(), type:'DEPOSIT', amount:amt, desc:`Crédito Z-Finance — ${loan.type}`, at:now.toISOString(), status:'CONFIRMED', category:'Crédito' })
+      msg = `Crédito de ${fmtBRL(amt)} aprovado e creditado`
+      details = { loanId:loan.id, amount:fmtBRL(amt), type:loan.type, status:'ACTIVE' }
+      break
+    }
+    case 'credit_pay': {
+      const loan = s.credit.loans.find(l => l.status === 'ACTIVE')
+      if (!loan) { msg = 'Nenhum empréstimo ativo'; break }
+      const installment = Math.round(loan.amount / loan.months)
+      s.accounts.main.balance -= installment
+      loan.paid++
+      if (loan.paid >= loan.months) { loan.status = 'PAID'; s.credit.limitUsed = Math.max(0, s.credit.limitUsed - loan.amount); s.credit.score = Math.min(1000, s.credit.score + 15) }
+      s.transactions.unshift({ id:uid(), type:'PAYMENT', amount:-installment, desc:`Parcela ${loan.paid}/${loan.months} — Crédito`, at:now.toISOString(), status:'CONFIRMED', category:'Crédito' })
+      msg = `Parcela ${loan.paid}/${loan.months} paga: ${fmtBRL(installment)}`
       break
     }
 

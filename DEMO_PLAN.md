@@ -58,17 +58,17 @@ Tarefas:
 
 ### ETAPA 3 — Página de Crédito (Z-Score + Simulador)
 **Impacto:** Alto — representa Módulos 3 e 9 (120 funções) que estavam ausentes  
-**Status:** ⏳ Pendente
+**Status:** ✅ Concluída
 
 Tarefas:
-- [ ] Criar `src/pages/Credito.jsx`
-- [ ] Adicionar tab "Crédito" na navegação (substituindo slot do Mais simplificado)
-- [ ] Z-Score visual (gauge circular 0–1000, colorido)
-- [ ] Linha de crédito disponível (fiat + cripto como colateral)
-- [ ] Simulador de empréstimo (valor, prazo, colateral, taxa)
-- [ ] Histórico de crédito (loans ativos e pagos)
-- [ ] Adicionar dados mock: `store.credit` com score, linhas, empréstimos
-- [ ] Adicionar actions simulate: `credit_simulate`, `credit_request`, `credit_pay`
+- [x] Criar `src/pages/Credito.jsx`
+- [x] Adicionar tab "Crédito" na navegação (ícone Landmark, substitui Investir no bottom nav)
+- [x] Z-Score visual (gauge SVG circular 0–1000, gradiente colorido, 5 níveis)
+- [x] Linha de crédito disponível (fiat + cripto como colateral, barra de utilização)
+- [x] Simulador de empréstimo (sliders para valor/prazo/taxa, resultado em tempo real)
+- [x] Histórico de crédito (loans ativos com barra de progresso + pagamento parcela)
+- [x] Adicionar dados mock: `store.credit` com score, scoreHistory, linhas, ofertas
+- [x] Adicionar actions simulate: `credit_simulate`, `credit_request`, `credit_pay`
 
 ---
 
@@ -186,7 +186,7 @@ Tarefas:
 |-------|-----------|--------|
 | 1 | Switcher de Persona | ✅ Concluída |
 | 2 | Conta AED | ✅ Concluída |
-| 3 | Página de Crédito | ⏳ Pendente |
+| 3 | Página de Crédito | ✅ Concluída |
 | 4 | Z-Pass | ⏳ Pendente |
 | 5 | PIX Internacional | ⏳ Pendente |
 | 6 | Zion AI Proativo | ⏳ Pendente |

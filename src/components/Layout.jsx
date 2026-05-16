@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react'
-import { Home, ArrowLeftRight, CreditCard, TrendingUp, MoreHorizontal, Zap, Bell, LogOut, Menu, X } from 'lucide-react'
+import { Home, ArrowLeftRight, CreditCard, TrendingUp, MoreHorizontal, Zap, Bell, LogOut, Menu, X, Landmark } from 'lucide-react'
 import { useApp } from '../App.jsx'
 import PersonaSwitcher, { PERSONA_CFG } from './PersonaSwitcher.jsx'
 
@@ -7,7 +7,7 @@ const NAV = [
   { id: 'home',    Icon: Home,           label: 'Início' },
   { id: 'mover',   Icon: ArrowLeftRight, label: 'Mover' },
   { id: 'cartoes', Icon: CreditCard,     label: 'Cartões' },
-  { id: 'investir',Icon: TrendingUp,     label: 'Investir' },
+  { id: 'credito', Icon: Landmark,       label: 'Crédito' },
   { id: 'mais',    Icon: MoreHorizontal, label: 'Mais' },
 ]
 
