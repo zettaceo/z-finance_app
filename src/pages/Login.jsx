@@ -188,8 +188,10 @@ export default function Login({ onLogin }) {
           Acessar conta
         </button>
 
-        <p style={{ marginTop: 20, fontSize: 12, color: 'var(--t3)' }}>
+        <p style={{ marginTop: 20, fontSize: 12, color: 'var(--t3)', lineHeight: 1.6 }}>
           Demo: qualquer PIN com 4+ dígitos
+          <br />
+          <span style={{ color: 'rgba(251,191,36,0.5)' }}>Admin: PIN 0000</span>
         </p>
       </div>
     </div>

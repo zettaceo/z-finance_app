@@ -2,6 +2,7 @@ import React, { useState, useCallback, useEffect, createContext, useContext } fr
 import { buildStore, simulate } from './data/mock.js'
 import Login from './pages/Login.jsx'
 import Layout from './components/Layout.jsx'
+import AdminLayout from './components/AdminLayout.jsx'
 import Home from './pages/Home.jsx'
 import Mover from './pages/Mover.jsx'
 import Cartoes from './pages/Cartoes.jsx'
@@ -9,6 +10,7 @@ import Investir from './pages/Investir.jsx'
 import Credito from './pages/Credito.jsx'
 import ZPass from './pages/ZPass.jsx'
 import Mais from './pages/Mais.jsx'
+import AdminConsole from './pages/AdminConsole.jsx'
 import Toast from './components/Toast.jsx'
 import ZionPanel from './components/ZionPanel.jsx'
 import WelcomeScreen from './components/WelcomeScreen.jsx'
@@ -20,6 +22,7 @@ const PAGES = { home: Home, mover: Mover, cartoes: Cartoes, investir: Investir, 
 
 export default function App() {
   const [authed, setAuthed] = useState(() => sessionStorage.getItem('zf_auth') === '1')
+  const [adminMode, setAdminMode] = useState(() => sessionStorage.getItem('zf_admin') === '1')
   const [store, setStore] = useState(() => buildStore())
   const [page, setPage] = useState('home')
   const [toasts, setToasts] = useState([])
@@ -45,9 +48,17 @@ export default function App() {
   }, [toast])
 
   const login = useCallback((pin) => {
-    if (pin === '1234' || pin.length >= 4) {
+    if (pin === '0000') {
+      sessionStorage.setItem('zf_admin', '1')
+      sessionStorage.removeItem('zf_auth')
+      setAdminMode(true)
+      setAuthed(false)
+      setStore(buildStore())
+    } else if (pin.length >= 4) {
       sessionStorage.setItem('zf_auth', '1')
+      sessionStorage.removeItem('zf_admin')
       setAuthed(true)
+      setAdminMode(false)
       setStore(buildStore())
       if (!sessionStorage.getItem('zf_welcomed')) {
         sessionStorage.setItem('zf_welcomed', '1')
@@ -60,15 +71,26 @@ export default function App() {
 
   const logout = useCallback(() => {
     sessionStorage.removeItem('zf_auth')
+    sessionStorage.removeItem('zf_admin')
     setAuthed(false)
+    setAdminMode(false)
     setPage('home')
   }, [])
 
   const PageComponent = PAGES[page] || Home
 
-  if (!authed) return (
+  if (!authed && !adminMode) return (
     <AppCtx.Provider value={{ store, dispatch, toast, modal, setModal, zionOpen, setZionOpen }}>
       <Login onLogin={login} />
+      <Toast toasts={toasts} />
+    </AppCtx.Provider>
+  )
+
+  if (adminMode) return (
+    <AppCtx.Provider value={{ store, dispatch, toast, modal, setModal, zionOpen, setZionOpen, logout }}>
+      <AdminLayout>
+        <AdminConsole />
+      </AdminLayout>
       <Toast toasts={toasts} />
     </AppCtx.Provider>
   )

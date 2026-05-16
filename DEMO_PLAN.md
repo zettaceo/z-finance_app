@@ -173,14 +173,14 @@ Tarefas:
 
 ### ETAPA 10 — Admin Console Separado
 **Impacto:** Estrutural — limpa a nav principal  
-**Status:** ⏳ Pendente
+**Status:** ✅ Concluída
 
 Tarefas:
-- [ ] Criar rota/estado `adminMode` separado
-- [ ] Mover para Admin Console: Reconciliação, Alertas, RBAC, Precificação Avançada, Observabilidade, Admin
-- [ ] Acesso via credencial diferente no Login (PIN "0000" = admin mode)
-- [ ] Nav do Admin Console com tema diferente (mais sóbrio, tons de cinza)
-- [ ] Mais.jsx volta a ter apenas: KYC, Compliance, Pré-cadastro, Configurações
+- [x] Criar rota/estado `adminMode` separado (sessionStorage `zf_admin`)
+- [x] Mover para Admin Console: Reconciliação, Alertas, RBAC, Precificação Avançada, Observabilidade, Admin, Regulatório
+- [x] Acesso via credencial diferente no Login (PIN "0000" = admin mode)
+- [x] Nav do Admin Console com tema diferente (slate/cinza, banner "Acesso restrito")
+- [x] Mais.jsx volta a ter apenas: KYC, Compliance, Pré-cadastro, Configurações
 
 ---
 
@@ -197,7 +197,7 @@ Tarefas:
 | 7 | Tiers de Cartão | ✅ Concluída |
 | 8 | Centro de Notificações | ✅ Concluída |
 | 9 | Welcome / Onboarding | ✅ Concluída |
-| 10 | Admin Console Separado | ⏳ Pendente |
+| 10 | Admin Console Separado | ✅ Concluída |
 
 ---
 
