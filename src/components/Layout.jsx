@@ -1,276 +1,221 @@
-import { useState } from 'react'
-import {
-  LayoutDashboard, ArrowLeftRight, TrendingUp, Compass,
-  LogOut, Settings, Bell, Sparkles, ChevronDown,
-  Menu, X, ChevronRight
-} from 'lucide-react'
-import Dashboard from '../pages/Dashboard.jsx'
-import Movimentar from '../pages/Movimentar.jsx'
-import Investir from '../pages/Investir.jsx'
-import Explorar from '../pages/Explorar.jsx'
-import ZionPanel from './ZionPanel.jsx'
-import SimModal from './SimModal.jsx'
+import React, { useState, useCallback } from 'react'
+import { Home, ArrowLeftRight, CreditCard, TrendingUp, MoreHorizontal, Zap, Bell, ChevronDown, LogOut, Menu, X } from 'lucide-react'
+import { useApp } from '../App.jsx'
 
 const NAV = [
-  { key:'dashboard',  label:'Dashboard',   Icon: LayoutDashboard },
-  { key:'movimentar', label:'Movimentar',  Icon: ArrowLeftRight  },
-  { key:'investir',   label:'Investir',    Icon: TrendingUp       },
-  { key:'explorar',   label:'Explorar',    Icon: Compass          },
+  { id: 'home',    Icon: Home,           label: 'Início' },
+  { id: 'mover',   Icon: ArrowLeftRight, label: 'Mover' },
+  { id: 'cartoes', Icon: CreditCard,     label: 'Cartões' },
+  { id: 'investir',Icon: TrendingUp,     label: 'Investir' },
+  { id: 'mais',    Icon: MoreHorizontal, label: 'Mais' },
 ]
 
-export default function Layout({ page, setPage, store, updateStore, showZion, setShowZion, simModal, setSimModal, logout, showToast, isDemo }) {
-  const [sideOpen, setSideOpen] = useState(false)
-  const [userMenu, setUserMenu] = useState(false)
+export default function Layout({ page, setPage, children }) {
+  const { store, logout, setZionOpen } = useApp()
+  const [sidebarOpen, setSidebarOpen] = useState(false)
+  const u = store.user
 
-  const navigate = (key) => {
-    setPage(key)
-    setSideOpen(false)
-  }
+  const nav = useCallback((id) => {
+    setPage(id)
+    setSidebarOpen(false)
+  }, [setPage])
 
-  const planColors = {
-    FREE: 'badge-gray', BASIC: 'badge-blue', BUSINESS: 'badge-purple'
-  }
+  const planColor = u.plan === 'INSTITUTIONAL' ? '#FBBF24' : u.plan === 'BUSINESS' ? '#818CF8' : 'var(--accent)'
 
   return (
-    <div style={{ display:'flex', height:'100vh', overflow:'hidden', background:'var(--bg)' }}>
-
-      {/* ── Mobile Sidebar Overlay ── */}
-      {sideOpen && (
-        <div className="sidebar-overlay hide-desktop" onClick={() => setSideOpen(false)} />
+    <div className="app-shell">
+      {/* Sidebar overlay on mobile */}
+      {sidebarOpen && (
+        <div
+          onClick={() => setSidebarOpen(false)}
+          style={{ position: 'fixed', inset: 0, background: 'rgba(4,12,27,0.7)', backdropFilter: 'blur(4px)', zIndex: 99 }}
+        />
       )}
 
-      {/* ── Sidebar ── */}
-      <aside style={{
-        width:'var(--sidebar-w)',
-        background:'rgba(10,14,24,0.95)',
-        backdropFilter:'blur(24px)',
-        borderRight:'1px solid var(--border)',
-        display:'flex', flexDirection:'column',
-        position:'fixed', left:0, top:0, bottom:0,
-        zIndex:250,
-        transform: sideOpen ? 'translateX(0)' : 'translateX(-100%)',
-        transition:'transform 0.25s ease',
-      }}
-        className="show-mobile"
-      >
-        <SidebarContent page={page} navigate={navigate} store={store} logout={logout} planColors={planColors} />
-      </aside>
-
-      {/* Desktop sidebar */}
-      <aside className="hide-mobile" style={{
-        width:'var(--sidebar-w)',
-        flexShrink:0,
-        background:'rgba(10,14,24,0.95)',
-        backdropFilter:'blur(24px)',
-        borderRight:'1px solid var(--border)',
-        display:'flex', flexDirection:'column',
-      }}>
-        <SidebarContent page={page} navigate={navigate} store={store} logout={logout} planColors={planColors} />
-      </aside>
-
-      {/* ── Main Column ── */}
-      <div style={{ flex:1, display:'flex', flexDirection:'column', minWidth:0, overflow:'hidden' }}>
-
-        {/* TopBar */}
-        <header style={{
-          height:'var(--topbar-h)',
-          background:'rgba(10,14,24,0.9)',
-          backdropFilter:'blur(20px)',
-          borderBottom:'1px solid var(--border)',
-          display:'flex', alignItems:'center',
-          padding:'0 20px', gap:12, flexShrink:0, position:'relative',
-        }}>
-          {/* Mobile menu */}
-          <button className="btn-icon show-mobile hide-desktop" onClick={() => setSideOpen(true)}>
-            <Menu size={16} />
-          </button>
-
-          {/* Breadcrumb */}
-          <div className="hide-mobile" style={{ display:'flex', alignItems:'center', gap:6, fontSize:13, color:'var(--t3)' }}>
-            <span>Z-Finance</span>
-            <ChevronRight size={12} />
-            <span style={{ color:'var(--t1)', fontWeight:600 }}>{NAV.find(n=>n.key===page)?.label}</span>
+      {/* Sidebar */}
+      <aside className={`sidebar${sidebarOpen ? ' open' : ''}`}>
+        <div className="sidebar-inner">
+          {/* Logo */}
+          <div style={{ padding: '24px 20px 20px', borderBottom: '1px solid var(--border)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <div style={{
+                width: 40, height: 40, borderRadius: 12,
+                background: 'linear-gradient(135deg, var(--accent), var(--accent-2))',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                flexShrink: 0,
+              }}>
+                <span style={{ fontFamily: 'Syne,sans-serif', fontWeight: 900, fontSize: 18, color: '#040C1B' }}>Z</span>
+              </div>
+              <div>
+                <p style={{ fontFamily: 'Syne,sans-serif', fontWeight: 800, fontSize: 16, color: 'var(--t1)', margin: 0 }}>Z-Finance</p>
+                <p style={{ fontSize: 11, color: 'var(--t3)', margin: 0 }}>Global Banking</p>
+              </div>
+            </div>
           </div>
 
-          {/* Mobile brand */}
-          <span className="show-mobile hide-desktop" style={{ fontFamily:'Syne', fontWeight:800, fontSize:16, letterSpacing:'0.06em' }}>
-            Z-<span style={{ color:'var(--green)' }}>FINANCE</span>
-          </span>
+          {/* User card */}
+          <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <div style={{
+                width: 44, height: 44, borderRadius: 14,
+                background: 'linear-gradient(135deg, #1E3A5F, #0C1E38)',
+                border: '2px solid var(--border)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                flexShrink: 0,
+                fontSize: 16, fontWeight: 700, color: 'var(--accent)',
+              }}>
+                {u.name.charAt(0)}
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <p style={{ fontWeight: 700, fontSize: 14, color: 'var(--t1)', margin: '0 0 2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{u.name}</p>
+                <span style={{
+                  fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em',
+                  color: planColor, background: `${planColor}18`, borderRadius: 6, padding: '2px 6px',
+                }}>
+                  {u.plan}
+                </span>
+              </div>
+            </div>
+          </div>
 
-          <div style={{ flex:1 }} />
+          {/* Nav items */}
+          <nav style={{ padding: '12px 12px', flex: 1 }}>
+            {NAV.map(({ id, Icon, label }) => {
+              const active = page === id
+              return (
+                <button key={id} onClick={() => nav(id)} style={{
+                  width: '100%', display: 'flex', alignItems: 'center', gap: 12,
+                  padding: '12px 14px', borderRadius: 12, border: 'none', cursor: 'pointer',
+                  background: active ? 'rgba(0,229,153,0.1)' : 'transparent',
+                  color: active ? 'var(--accent)' : 'var(--t2)',
+                  fontSize: 14, fontWeight: active ? 700 : 500,
+                  transition: 'all 0.15s ease',
+                  marginBottom: 2,
+                  textAlign: 'left',
+                }}>
+                  <Icon size={18} style={{ flexShrink: 0 }} />
+                  {label}
+                  {active && <div style={{ marginLeft: 'auto', width: 6, height: 6, borderRadius: '50%', background: 'var(--accent)' }} />}
+                </button>
+              )
+            })}
+          </nav>
 
-          {/* Demo badge */}
-          {isDemo && (
-            <div className="badge badge-gold hide-mobile">Demo</div>
-          )}
-
-          {/* Notifications */}
-          <button className="btn-icon" style={{ position:'relative' }} onClick={() => showToast('2 alertas de compliance pendentes', 'info')}>
-            <Bell size={15} />
-            <span style={{ position:'absolute', top:-2, right:-2, width:8, height:8, borderRadius:'50%', background:'var(--red)', border:'1.5px solid var(--bg)' }} />
-          </button>
-
-          {/* Zion button */}
-          <button onClick={() => setShowZion(!showZion)} style={{
-            display:'flex', alignItems:'center', gap:8,
-            background: showZion ? 'rgba(0,232,122,0.12)' : 'rgba(255,255,255,0.04)',
-            border:`1px solid ${showZion ? 'rgba(0,232,122,0.35)' : 'var(--border)'}`,
-            borderRadius:10, padding:'7px 12px', cursor:'pointer', transition:'all 0.2s',
-          }}>
-            <div style={{ width:8, height:8, borderRadius:'50%', background:'var(--green)', boxShadow:'0 0 8px rgba(0,232,122,0.6)' }} />
-            <span style={{ fontSize:12, fontWeight:600, color: showZion ? 'var(--green)' : 'var(--t2)' }}>Zion AI</span>
-          </button>
-
-          {/* User avatar */}
-          <div style={{ position:'relative' }}>
-            <button onClick={() => setUserMenu(!userMenu)} style={{
-              display:'flex', alignItems:'center', gap:8, background:'none', border:'none', cursor:'pointer', padding:'4px 6px', borderRadius:10,
+          {/* Zion AI button */}
+          <div style={{ padding: '12px 12px' }}>
+            <button onClick={() => setZionOpen(true)} style={{
+              width: '100%', padding: '12px 14px', borderRadius: 14,
+              background: 'linear-gradient(135deg, rgba(0,229,153,0.15), rgba(0,229,153,0.05))',
+              border: '1px solid rgba(0,229,153,0.2)',
+              cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10,
             }}>
               <div style={{
-                width:32, height:32, borderRadius:'50%',
-                background:'linear-gradient(135deg, var(--green), var(--green2))',
-                display:'flex', alignItems:'center', justifyContent:'center',
-                fontSize:12, fontWeight:700, color:'#07090f',
+                width: 28, height: 28, borderRadius: 8,
+                background: 'linear-gradient(135deg, var(--accent), var(--accent-2))',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
               }}>
-                {store?.user?.avatarInitials || 'ZF'}
+                <Zap size={14} color="#040C1B" fill="#040C1B" />
               </div>
-              <ChevronDown size={12} color='var(--t3)' />
+              <div style={{ textAlign: 'left' }}>
+                <p style={{ fontSize: 13, fontWeight: 700, color: 'var(--accent)', margin: 0 }}>Zion AI</p>
+                <p style={{ fontSize: 11, color: 'var(--t3)', margin: 0 }}>Assistente financeiro</p>
+              </div>
             </button>
+          </div>
 
-            {/* User dropdown */}
-            {userMenu && (
-              <>
-                <div style={{ position:'fixed', inset:0, zIndex:300 }} onClick={() => setUserMenu(false)} />
-                <div style={{
-                  position:'absolute', right:0, top:'calc(100% + 8px)', width:220,
-                  background:'var(--card2)', border:'1px solid rgba(255,255,255,0.1)',
-                  borderRadius:14, padding:12, zIndex:310,
-                  boxShadow:'0 16px 48px rgba(0,0,0,0.5)',
-                }}>
-                  <div style={{ paddingBottom:10, marginBottom:10, borderBottom:'1px solid var(--border)' }}>
-                    <p style={{ fontSize:13, fontWeight:600, marginBottom:2 }}>{store?.user?.name}</p>
-                    <p style={{ fontSize:11, color:'var(--t3)' }}>{store?.user?.email}</p>
-                    <span className={`badge ${planColors[store?.user?.plan] || 'badge-gray'}`} style={{ marginTop:6 }}>{store?.user?.plan}</span>
-                  </div>
-                  <button className="btn-ghost" style={{ width:'100%', marginBottom:8, fontSize:12, padding:'8px 12px' }}
-                    onClick={() => { setUserMenu(false); showToast('Configurações em breve', 'info') }}>
-                    <Settings size={13} style={{ marginRight:6 }} /> Configurações
-                  </button>
-                  <button className="btn-danger" style={{ width:'100%', fontSize:12, padding:'8px 12px' }}
-                    onClick={() => { setUserMenu(false); logout() }}>
-                    <LogOut size={13} style={{ marginRight:6 }} /> Sair
-                  </button>
-                </div>
-              </>
-            )}
+          {/* Logout */}
+          <div style={{ padding: '0 12px 12px' }}>
+            <button onClick={logout} style={{
+              width: '100%', padding: '12px 14px', borderRadius: 12, border: 'none',
+              background: 'transparent', cursor: 'pointer',
+              display: 'flex', alignItems: 'center', gap: 10,
+              color: 'var(--t3)', fontSize: 14,
+            }}>
+              <LogOut size={16} />
+              Sair
+            </button>
+          </div>
+        </div>
+      </aside>
+
+      {/* Main */}
+      <div className="main-area">
+        {/* Topbar */}
+        <header className="topbar">
+          {/* Mobile: hamburger */}
+          <button
+            className="sidebar-toggle"
+            onClick={() => setSidebarOpen(o => !o)}
+            style={{
+              width: 40, height: 40, borderRadius: 12, border: 'none',
+              background: 'var(--surface-2)', cursor: 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              color: 'var(--t1)',
+            }}
+          >
+            {sidebarOpen ? <X size={18} /> : <Menu size={18} />}
+          </button>
+
+          {/* Center: Page title on mobile */}
+          <div className="topbar-title">
+            <span style={{ fontFamily: 'Syne,sans-serif', fontWeight: 800, fontSize: 17, color: 'var(--t1)' }}>
+              {NAV.find(n => n.id === page)?.label || 'Z-Finance'}
+            </span>
+          </div>
+
+          {/* Right actions */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <button style={{
+              width: 40, height: 40, borderRadius: 12, border: 'none',
+              background: 'var(--surface-2)', cursor: 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              color: 'var(--t2)', position: 'relative',
+            }}>
+              <Bell size={17} />
+              <span style={{
+                position: 'absolute', top: 8, right: 8, width: 7, height: 7,
+                borderRadius: '50%', background: 'var(--accent)',
+                border: '1px solid var(--bg)',
+              }} />
+            </button>
+            <button onClick={() => setZionOpen(true)} style={{
+              width: 40, height: 40, borderRadius: 12, border: 'none',
+              background: 'linear-gradient(135deg, var(--accent), var(--accent-2))',
+              cursor: 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              color: '#040C1B',
+            }}>
+              <Zap size={17} fill="#040C1B" />
+            </button>
           </div>
         </header>
 
-        {/* Content */}
-        <main style={{ flex:1, overflowY:'auto', padding:'20px', paddingBottom:80 }}>
-          <div style={{ maxWidth:1100, margin:'0 auto' }}>
-            {page === 'dashboard'  && <Dashboard  store={store} updateStore={updateStore} setSimModal={setSimModal} showToast={showToast} />}
-            {page === 'movimentar' && <Movimentar store={store} updateStore={updateStore} showToast={showToast} />}
-            {page === 'investir'   && <Investir   store={store} updateStore={updateStore} showToast={showToast} />}
-            {page === 'explorar'   && <Explorar   store={store} updateStore={updateStore} showToast={showToast} />}
-          </div>
+        {/* Page content */}
+        <main className="content">
+          {children}
         </main>
+      </div>
 
-        {/* Bottom Nav (mobile) */}
-        <nav className="show-mobile hide-desktop" style={{
-          position:'fixed', bottom:0, left:0, right:0,
-          background:'rgba(10,14,24,0.95)',
-          backdropFilter:'blur(20px)',
-          borderTop:'1px solid var(--border)',
-          display:'flex', padding:'8px 0 max(8px, env(safe-area-inset-bottom))',
-          zIndex:100,
-        }}>
-          {NAV.map(({ key, label, Icon }) => (
-            <button key={key} onClick={() => navigate(key)}
-              className={`bnav-item ${page === key ? 'active' : ''}`}
-              style={{ background:'none', border:'none', cursor:'pointer' }}>
-              <Icon size={20} />
-              <span>{label}</span>
+      {/* Bottom nav (mobile) */}
+      <nav className="bottom-nav">
+        {NAV.map(({ id, Icon, label }) => {
+          const active = page === id
+          return (
+            <button key={id} onClick={() => setPage(id)} style={{
+              flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center',
+              justifyContent: 'center', gap: 3, border: 'none', cursor: 'pointer',
+              background: 'transparent', padding: '8px 0',
+              color: active ? 'var(--accent)' : 'var(--t3)',
+              transition: 'color 0.15s ease',
+              minHeight: 44,
+            }}>
+              <Icon size={20} strokeWidth={active ? 2.5 : 1.8} />
+              <span style={{ fontSize: 10, fontWeight: active ? 700 : 500 }}>{label}</span>
+              {active && <div style={{ width: 4, height: 4, borderRadius: '50%', background: 'var(--accent)', marginTop: -1 }} />}
             </button>
-          ))}
-        </nav>
-      </div>
-
-      {/* Zion Panel */}
-      {showZion && (
-        <ZionPanel store={store} onClose={() => setShowZion(false)} showToast={showToast} />
-      )}
-
-      {/* Simulation Modal */}
-      {simModal && (
-        <SimModal
-          config={simModal}
-          store={store}
-          updateStore={updateStore}
-          showToast={showToast}
-          onClose={() => setSimModal(null)}
-        />
-      )}
-    </div>
-  )
-}
-
-function SidebarContent({ page, navigate, store, logout, planColors }) {
-  return (
-    <>
-      {/* Logo */}
-      <div style={{ padding:'20px 16px 16px', borderBottom:'1px solid var(--border)' }}>
-        <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-          <div style={{
-            width:36, height:36, borderRadius:10,
-            background:'linear-gradient(135deg, rgba(0,232,122,0.15), rgba(0,232,122,0.05))',
-            border:'1.5px solid rgba(0,232,122,0.4)',
-            display:'flex', alignItems:'center', justifyContent:'center',
-            boxShadow:'0 0 20px rgba(0,232,122,0.15)',
-          }}>
-            <span style={{ fontFamily:'Syne', fontWeight:900, fontSize:18, color:'var(--green)' }}>Z</span>
-          </div>
-          <div>
-            <p style={{ fontFamily:'Syne', fontWeight:700, fontSize:14, letterSpacing:'0.08em' }}>Z-FINANCE</p>
-            <p style={{ fontSize:10, color:'var(--t3)', letterSpacing:'0.1em', textTransform:'uppercase' }}>Core Banking</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Nav */}
-      <nav style={{ padding:'12px 12px', flex:1 }}>
-        <p style={{ fontSize:10, color:'var(--t3)', letterSpacing:'0.1em', textTransform:'uppercase', marginBottom:8, paddingLeft:12 }}>Menu</p>
-        {NAV.map(({ key, label, Icon }) => (
-          <button key={key} onClick={() => navigate(key)}
-            className={`nav-item ${page === key ? 'active' : ''}`}
-            style={{ width:'100%', border:'none', background:'none', cursor:'pointer', textAlign:'left', marginBottom:2 }}>
-            <Icon size={16} />
-            {label}
-          </button>
-        ))}
+          )
+        })}
       </nav>
-
-      {/* User info */}
-      <div style={{ padding:'12px 16px', borderTop:'1px solid var(--border)' }}>
-        <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-          <div style={{
-            width:32, height:32, borderRadius:'50%', flexShrink:0,
-            background:'linear-gradient(135deg, var(--green), var(--green2))',
-            display:'flex', alignItems:'center', justifyContent:'center',
-            fontSize:11, fontWeight:700, color:'#07090f',
-          }}>
-            {store?.user?.avatarInitials || 'ZF'}
-          </div>
-          <div style={{ minWidth:0, flex:1 }}>
-            <p style={{ fontSize:12, fontWeight:600, whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>
-              {store?.user?.name || 'Usuário'}
-            </p>
-            <span className={`badge ${planColors[store?.user?.plan] || 'badge-gray'}`} style={{ fontSize:9 }}>
-              {store?.user?.plan || 'FREE'}
-            </span>
-          </div>
-        </div>
-      </div>
-    </>
+    </div>
   )
 }

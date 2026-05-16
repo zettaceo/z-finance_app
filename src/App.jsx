@@ -1,106 +1,78 @@
-import { useState, useCallback, useEffect } from 'react'
-import { buildMockStore } from './data/mock.js'
+import React, { useState, useCallback, useEffect, createContext, useContext } from 'react'
+import { buildStore, simulate } from './data/mock.js'
 import Login from './pages/Login.jsx'
 import Layout from './components/Layout.jsx'
+import Home from './pages/Home.jsx'
+import Mover from './pages/Mover.jsx'
+import Cartoes from './pages/Cartoes.jsx'
+import Investir from './pages/Investir.jsx'
+import Mais from './pages/Mais.jsx'
 import Toast from './components/Toast.jsx'
+import ZionPanel from './components/ZionPanel.jsx'
 
-const SESSION_KEY = 'zf_session'
+export const AppCtx = createContext(null)
+export const useApp = () => useContext(AppCtx)
+
+const PAGES = { home: Home, mover: Mover, cartoes: Cartoes, investir: Investir, mais: Mais }
 
 export default function App() {
-  const [auth,     setAuth]     = useState(null)   // null | { token, demo }
-  const [page,     setPage]     = useState('dashboard')
-  const [store,    setStore]    = useState(null)
-  const [toast,    setToast]    = useState(null)
-  const [showZion, setShowZion] = useState(false)
-  const [simModal, setSimModal] = useState(null)   // { action, title, fields[] }
+  const [authed, setAuthed] = useState(() => sessionStorage.getItem('zf_auth') === '1')
+  const [store, setStore] = useState(() => buildStore())
+  const [page, setPage] = useState('home')
+  const [toasts, setToasts] = useState([])
+  const [zionOpen, setZionOpen] = useState(false)
+  const [modal, setModal] = useState(null)
 
-  // restore session
-  useEffect(() => {
-    try {
-      const saved = JSON.parse(sessionStorage.getItem(SESSION_KEY) || 'null')
-      if (saved?.auth) {
-        setAuth(saved.auth)
-        setStore(saved.store || buildMockStore())
-      }
-    } catch {}
-  }, [])
-
-  const showToast = useCallback((message, type = 'success') => {
+  const toast = useCallback((msg, type = 'success') => {
     const id = Date.now()
-    setToast({ id, message, type })
-    setTimeout(() => setToast(t => t?.id === id ? null : t), 3800)
+    setToasts(t => [...t, { id, msg, type }])
+    setTimeout(() => setToasts(t => t.filter(x => x.id !== id)), 4000)
   }, [])
 
-  const loginDemo = useCallback(() => {
-    const s = buildMockStore()
-    setStore(s)
-    setAuth({ demo: true, token: 'demo' })
-    sessionStorage.setItem(SESSION_KEY, JSON.stringify({ auth: { demo: true, token: 'demo' }, store: s }))
-    showToast('Modo demo ativado — bem-vindo, Rafael!', 'success')
-  }, [showToast])
+  const dispatch = useCallback((action, data) => {
+    setStore(prev => {
+      try {
+        const next = simulate(prev, action, data)
+        return next
+      } catch (e) {
+        toast(e.message, 'error')
+        return prev
+      }
+    })
+  }, [toast])
 
-  const loginLive = useCallback(async (email, password, apiBase) => {
-    try {
-      const resp = await fetch(`${apiBase.replace(/\/$/, '')}/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-      })
-      if (!resp.ok) throw new Error((await resp.json()).error || 'Credenciais inválidas')
-      const data = await resp.json()
-      const s = buildMockStore()
-      s.user.email = email
-      setStore(s)
-      setAuth({ demo: false, token: data.access_token, apiBase })
-      sessionStorage.setItem(SESSION_KEY, JSON.stringify({ auth: { demo: false, token: data.access_token, apiBase }, store: s }))
-      showToast('Conectado com sucesso!', 'success')
-    } catch (e) {
-      throw e
+  const login = useCallback((pin) => {
+    if (pin === '1234' || pin.length >= 4) {
+      sessionStorage.setItem('zf_auth', '1')
+      setAuthed(true)
+      setStore(buildStore())
+    } else {
+      toast('PIN incorreto', 'error')
     }
-  }, [showToast])
+  }, [toast])
 
   const logout = useCallback(() => {
-    setAuth(null)
-    setStore(null)
-    setPage('dashboard')
-    setShowZion(false)
-    sessionStorage.removeItem(SESSION_KEY)
-    showToast('Sessão encerrada', 'info')
-  }, [showToast])
+    sessionStorage.removeItem('zf_auth')
+    setAuthed(false)
+    setPage('home')
+  }, [])
 
-  const updateStore = useCallback((newStore) => {
-    setStore(newStore)
-    sessionStorage.setItem(SESSION_KEY, JSON.stringify({
-      auth,
-      store: newStore,
-    }))
-  }, [auth])
+  const PageComponent = PAGES[page] || Home
 
-  if (!auth) {
-    return (
-      <>
-        <Login onDemo={loginDemo} onLive={loginLive} />
-        {toast && <Toast {...toast} />}
-      </>
-    )
-  }
+  if (!authed) return (
+    <AppCtx.Provider value={{ store, dispatch, toast, modal, setModal, zionOpen, setZionOpen }}>
+      <Login onLogin={login} />
+      <Toast toasts={toasts} />
+    </AppCtx.Provider>
+  )
 
   return (
-    <>
-      <Layout
-        page={page}
-        setPage={setPage}
-        store={store}
-        updateStore={updateStore}
-        showZion={showZion}
-        setShowZion={setShowZion}
-        simModal={simModal}
-        setSimModal={setSimModal}
-        logout={logout}
-        showToast={showToast}
-        isDemo={auth.demo}
-      />
-      {toast && <Toast {...toast} />}
-    </>
+    <AppCtx.Provider value={{ store, dispatch, toast, modal, setModal, zionOpen, setZionOpen, logout }}>
+      <Layout page={page} setPage={setPage}>
+        <PageComponent />
+      </Layout>
+      <ZionPanel />
+      <Toast toasts={toasts} />
+    </AppCtx.Provider>
   )
 }

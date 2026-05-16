@@ -1,422 +1,517 @@
-/* ─────────────────────────────────────────────
-   Z-FINANCE · Demo Mock Store
-   All amounts in cents (BRL) unless stated
-───────────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════
+   Z-FINANCE · Mock Store & Simulation Engine v3
+   Cobre 100% dos endpoints do backend
+═══════════════════════════════════════════════════════ */
 
-const uid = () => Math.random().toString(36).slice(2, 10)
+const uid = () => Math.random().toString(36).slice(2,10).toUpperCase()
 const now = new Date()
-const daysAgo = (d) => new Date(now - d * 86400000).toISOString()
+const daysAgo = (d,h=0) => new Date(now - d*86400000 - h*3600000).toISOString()
 
-export const DEFAULT_USER = {
-  id:      '00000000-0000-0000-0000-000000000001',
-  name:    'Rafael Mendonça',
-  email:   'rafael@zetta.bank',
-  type:    'PF',
-  status:  'ACTIVE',
-  plan:    'BUSINESS',
-  uxMode:  'PRO',
-  avatarInitials: 'RM',
+/* ── Formatters (export first, used everywhere) ─────── */
+export const fmtBRL = (cents) =>
+  (Number(cents||0)/100).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})
+
+export const fmtNum = (n, dec=2) =>
+  Number(n||0).toLocaleString('pt-BR',{minimumFractionDigits:dec,maximumFractionDigits:dec})
+
+export const relTime = (iso) => {
+  if (!iso) return '—'
+  const d = Date.now() - new Date(iso).getTime()
+  const m = Math.floor(d/60000)
+  if (m < 1)  return 'agora'
+  if (m < 60) return `${m}min`
+  const h = Math.floor(m/60)
+  if (h < 24) return `${h}h`
+  return `${Math.floor(h/24)}d`
 }
 
-export function buildMockStore() {
-  return {
-    user: { ...DEFAULT_USER },
+export const txLabel = (type) => ({
+  PIX_OUT:'PIX Enviado', PIX_IN:'PIX Recebido',
+  TRANSFER_IN:'Transferência', TRANSFER_OUT:'Transferência',
+  PAYMENT:'Pagamento', CARD_AUTH:'Cartão JIT',
+  TRADE_BUY:'Compra Cripto', TRADE_SELL:'Venda Cripto',
+  DEPOSIT:'Depósito', WITHDRAWAL:'Saque', REVERSAL:'Estorno',
+}[type] || type)
 
-    account: {
-      id:       '00000000-0000-0000-0000-000000000002',
-      balance:  2456710,   // R$ 24.567,10
-      holds:    150000,    // R$ 1.500,00 bloqueado
+export const txDir = (type) => {
+  if (['PIX_IN','TRANSFER_IN','DEPOSIT','TRADE_SELL'].includes(type)) return 'in'
+  if (['PIX_OUT','PAYMENT','CARD_AUTH','TRADE_BUY','WITHDRAWAL','TRANSFER_OUT'].includes(type)) return 'out'
+  return 'neu'
+}
+
+/* ── Default Store ──────────────────────────────────── */
+export function buildStore() {
+  return {
+    user: {
+      id:       '00000000-0000-0000-0000-000000000001',
+      name:     'Rafael Mendonça',
+      email:    'rafael@zetta.bank',
+      type:     'PJ',
+      status:   'ACTIVE',
+      plan:     'BUSINESS',
+      uxMode:   'PRO',
+      initials: 'RM',
+      kycLevel: 'FULL',
     },
 
-    investments: {
-      cdb:   350000,   // R$ 3.500,00
-      tesouro: 180000, // R$ 1.800,00
+    accounts: {
+      main: {
+        id:       '00000000-0000-0000-0000-000000000010',
+        label:    'Conta Principal',
+        currency: 'BRL',
+        balance:  2456710,  // R$ 24.567,10
+        holds:    0,
+        iban:     'ZF •••• •••• 8421',
+      },
+      usd: {
+        id:       '00000000-0000-0000-0000-000000000011',
+        label:    'Conta USD',
+        currency: 'USD',
+        balance:  150000,   // US$ 1.500,00
+        holds:    0,
+        iban:     'ZF •••• •••• 2204',
+      },
+      invest: {
+        id:       '00000000-0000-0000-0000-000000000012',
+        label:    'Investimentos',
+        currency: 'BRL',
+        balance:  530000,   // R$ 5.300,00
+        holds:    0,
+        iban:     'ZF •••• •••• 3309',
+      },
     },
 
     crypto: [
-      {
-        symbol:    'BTC',
-        name:      'Bitcoin',
-        amount:    0.5432,
-        price:     345820.00,
-        change24h: 3.2,
-        history:   [310000,315000,308000,322000,335000,340000,345820],
-      },
-      {
-        symbol:    'ETH',
-        name:      'Ethereum',
-        amount:    2.315,
-        price:     18240.50,
-        change24h: 1.5,
-        history:   [16800,17200,16500,17800,18000,18100,18240],
-      },
-      {
-        symbol:    'USDT',
-        name:      'Tether',
-        amount:    1250.00,
-        price:     5.78,
-        change24h: 0.1,
-        history:   [5.75,5.76,5.77,5.76,5.78,5.78,5.78],
-      },
+      { symbol:'BTC', name:'Bitcoin',  amount:0.5432, price:345820, change24h:3.2,  change7d:8.1,  history:[310000,315000,308000,322000,335000,340000,345820], color:'#F7931A', letter:'₿' },
+      { symbol:'ETH', name:'Ethereum', amount:2.315,  price:18240,  change24h:1.5,  change7d:4.2,  history:[16800,17200,16500,17800,18000,18100,18240],         color:'#627EEA', letter:'Ξ' },
+      { symbol:'SOL', name:'Solana',   amount:12.5,   price:890,    change24h:-0.8, change7d:12.4, history:[810,840,795,870,885,878,890],                        color:'#9945FF', letter:'◎' },
+      { symbol:'USDT',name:'Tether',   amount:850,    price:578,    change24h:0.1,  change7d:0.0,  history:[576,577,577,577,578,578,578],                        color:'#26A17B', letter:'₮' },
     ],
+
+    investments: {
+      cdb:     350000,  // CDB Banco Zetta
+      tesouro: 180000,  // Tesouro SELIC
+      lci:     0,
+    },
+
+    market: {
+      USD: { rate:578, change:0.3 },
+      EUR: { rate:624, change:-0.2 },
+      GBP: { rate:731, change:0.1 },
+    },
 
     transactions: [
-      { id: uid(), type:'PIX_OUT',     amount: -4590,   description: 'PicPay Tecnologia',    createdAt: daysAgo(0),   status:'CONFIRMED' },
-      { id: uid(), type:'TRANSFER_IN', amount: 500000,  description: 'TED Recebida — Zetta', createdAt: daysAgo(1),   status:'CONFIRMED' },
-      { id: uid(), type:'PAYMENT',     amount: -95000,  description: 'Conta de Luz — ENEL',  createdAt: daysAgo(1),   status:'CONFIRMED' },
-      { id: uid(), type:'PIX_IN',      amount: 120000,  description: 'PIX — Ana Clara',      createdAt: daysAgo(2),   status:'CONFIRMED' },
-      { id: uid(), type:'CARD_AUTH',   amount: -28500,  description: 'iFood Restaurante',    createdAt: daysAgo(2),   status:'CONFIRMED' },
-      { id: uid(), type:'TRADE_BUY',   amount: -150000, description: 'Compra BTC',            createdAt: daysAgo(3),   status:'CONFIRMED' },
-      { id: uid(), type:'PIX_OUT',     amount: -8200,   description: 'PIX — João Carvalho',  createdAt: daysAgo(4),   status:'CONFIRMED' },
-      { id: uid(), type:'DEPOSIT',     amount: 1000000, description: 'Depósito Bancário',     createdAt: daysAgo(5),   status:'CONFIRMED' },
-      { id: uid(), type:'PAYMENT',     amount: -42000,  description: 'Internet — Vivo Fibra', createdAt: daysAgo(6),  status:'CONFIRMED' },
-      { id: uid(), type:'TRADE_SELL',  amount: 85000,   description: 'Venda ETH parcial',     createdAt: daysAgo(7),  status:'CONFIRMED' },
+      { id:uid(), type:'PIX_OUT',     amount:-4590,   desc:'PicPay Tecnologia',      at:daysAgo(0,2),  status:'CONFIRMED', category:'Serviços' },
+      { id:uid(), type:'TRANSFER_IN', amount:500000,  desc:'TED Recebida — ZettaCo', at:daysAgo(1,1),  status:'CONFIRMED', category:'Transferência' },
+      { id:uid(), type:'PAYMENT',     amount:-95000,  desc:'ENEL — Conta de Luz',    at:daysAgo(1,4),  status:'CONFIRMED', category:'Utilidades' },
+      { id:uid(), type:'PIX_IN',      amount:120000,  desc:'PIX — Ana Clara Lima',   at:daysAgo(2,3),  status:'CONFIRMED', category:'PIX' },
+      { id:uid(), type:'CARD_AUTH',   amount:-28500,  desc:'iFood Restaurantes',     at:daysAgo(2,6),  status:'CONFIRMED', category:'Alimentação' },
+      { id:uid(), type:'TRADE_BUY',   amount:-150000, desc:'Compra 0.43 BTC',        at:daysAgo(3,0),  status:'CONFIRMED', category:'Cripto' },
+      { id:uid(), type:'PIX_OUT',     amount:-8200,   desc:'PIX — João Carvalho',    at:daysAgo(4,5),  status:'CONFIRMED', category:'PIX' },
+      { id:uid(), type:'DEPOSIT',     amount:1000000, desc:'Depósito TED Externo',   at:daysAgo(5,8),  status:'CONFIRMED', category:'Depósito' },
+      { id:uid(), type:'PAYMENT',     amount:-42000,  desc:'Vivo Fibra — Internet',  at:daysAgo(6,2),  status:'CONFIRMED', category:'Utilidades' },
+      { id:uid(), type:'TRADE_SELL',  amount:85000,   desc:'Venda 0.12 ETH',         at:daysAgo(7,9),  status:'CONFIRMED', category:'Cripto' },
+      { id:uid(), type:'PIX_IN',      amount:250000,  desc:'PIX — Mariana Costa',    at:daysAgo(8,3),  status:'CONFIRMED', category:'PIX' },
+      { id:uid(), type:'WITHDRAWAL',  amount:-50000,  desc:'Saque PIX — Chave CPF',  at:daysAgo(9,1),  status:'CONFIRMED', category:'Saque' },
     ],
 
-    // 7-day cash flow for chart
-    cashFlow: (() => {
-      const labels = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb']
-      return labels.map((d, i) => ({
-        day:      d,
-        income:   [0, 500000, 120000, 0, 85000, 0, 1000000][i],
-        expenses: [0, 95000,  28500,  150000, 8200, 42000, 4590][i],
-      }))
-    })(),
+    cashFlow: [
+      { day:'Dom', income:0,       expenses:0 },
+      { day:'Seg', income:500000,  expenses:95000 },
+      { day:'Ter', income:120000,  expenses:28500 },
+      { day:'Qua', income:0,       expenses:150000 },
+      { day:'Qui', income:85000,   expenses:8200 },
+      { day:'Sex', income:0,       expenses:42000 },
+      { day:'Sáb', income:1000000, expenses:4590 },
+    ],
 
     kyc: {
       level:   'FULL',
-      limits:  { daily: 10000000, monthly: 50000000 },
-      used:    { daily: 1250000,  monthly: 8750000  },
+      status:  'VERIFIED',
+      limits:  { daily:10000000, monthly:50000000 },
+      used:    { daily:1250000,  monthly:8750000 },
+      providerRef: `KYC-${uid()}`,
     },
 
-    pricingRate: { BTC: 345820, ETH: 18240, spread: 0.012 },
+    pricingRate: { BTC:345820, ETH:18240, SOL:890, USDT:578, spread:0.012 },
 
-    invoices:        [],
-    payments:        [],
-    compliance:      [],
-    preRegistrations:[],
+    card: {
+      number:    '•••• •••• •••• 8421',
+      holder:    'RAFAEL MENDONCA',
+      exp:       '12/27',
+      cvv:       '•••',
+      frozen:    false,
+      limit:     500000,
+      limitUsed: 28500,
+    },
+
+    invoices:         [],
+    payments:         [],
+    pixKeys:          [{ id:uid(), type:'EMAIL', key:'rafael@zetta.bank', createdAt:daysAgo(30) }],
+    compliance:       [],
+    preRegistrations: [],
+    auditLogs:        [],
 
     observability: {
+      uptime:          '99.98%',
+      latencyP99:      42,
       pendingWebhooks: 1,
-      reconcilePending: 0,
-      retries: 2,
-      uptime: '99.97%',
-      latencyMs: 42,
+      reconcilePending:0,
+      retries:         2,
+      traceId:         uid(),
     },
   }
 }
 
-/* ─── Simulation Engine ─── */
-export function runSimulation(store, action, formData = {}) {
-  const s = JSON.parse(JSON.stringify(store)) // deep clone
-  let message = ''
-  let details = {}
+/* ── Simulation Engine ──────────────────────────────── */
+export function simulate(store, action, data = {}) {
+  const s = JSON.parse(JSON.stringify(store))
+  let msg = '', details = {}
 
   switch (action) {
-    // ── PIX ──────────────────────────────────────────────
+
+    /* ── PIX ───────────────────────────── */
     case 'pix_send': {
-      const amt = Math.round((Number(formData.amount) || 50) * 100)
+      const amt = cents(data.amount || 100)
       const fee = Math.round(amt * 0.002)
-      s.account.balance -= amt + fee
-      s.transactions.unshift({
-        id: uid(), type: 'PIX_OUT',
-        amount: -(amt + fee),
-        description: `PIX → ${formData.receiver || 'Destinatário'}`,
-        createdAt: new Date().toISOString(), status: 'CONFIRMED',
-      })
-      message = `PIX enviado: ${fmtBRL(amt)} (taxa: ${fmtBRL(fee)})`
-      details = { id: `e2e_${uid()}`, status: 'CONFIRMED', net: fmtBRL(amt - fee) }
+      s.accounts.main.balance -= amt + fee
+      s.kyc.used.daily = (s.kyc.used.daily || 0) + amt
+      s.transactions.unshift({ id:uid(), type:'PIX_OUT', amount:-(amt+fee), desc:`PIX → ${data.receiver||'Destinatário'}`, at:now.toISOString(), status:'CONFIRMED', category:'PIX' })
+      msg = `PIX enviado: ${fmtBRL(amt)} (taxa ${fmtBRL(fee)})`
+      details = { endToEndId:`E${uid()}`, status:'CONFIRMED', fee:fmtBRL(fee), net:fmtBRL(amt-fee) }
       break
     }
     case 'pix_receive': {
-      const amt = Math.round((Number(formData.amount) || 200) * 100)
-      s.account.balance += amt
-      s.transactions.unshift({
-        id: uid(), type: 'PIX_IN',
-        amount: amt,
-        description: `PIX ← ${formData.sender || 'Remetente'}`,
-        createdAt: new Date().toISOString(), status: 'CONFIRMED',
-      })
-      message = `PIX recebido: ${fmtBRL(amt)}`
-      details = { id: `e2e_${uid()}`, status: 'CONFIRMED' }
+      const amt = cents(data.amount || 200)
+      s.accounts.main.balance += amt
+      s.transactions.unshift({ id:uid(), type:'PIX_IN', amount:amt, desc:`PIX ← ${data.sender||'Remetente'}`, at:now.toISOString(), status:'CONFIRMED', category:'PIX' })
+      msg = `PIX recebido: ${fmtBRL(amt)}`
+      details = { endToEndId:`E${uid()}`, status:'CONFIRMED' }
       break
     }
-    case 'pix_crypto': {
-      const usdtAmt = Number(formData.usdt || 100)
-      const brlAmt  = Math.round(usdtAmt * s.pricingRate.ETH * 0.05)
-      s.account.balance += brlAmt
-      s.transactions.unshift({
-        id: uid(), type: 'PIX_IN',
-        amount: brlAmt,
-        description: `PIX via Cripto (${usdtAmt} USDT)`,
-        createdAt: new Date().toISOString(), status: 'CONFIRMED',
-      })
-      message = `PIX via cripto: recebido ${fmtBRL(brlAmt)} (${usdtAmt} USDT)`
-      details = { usdt: usdtAmt, brl: fmtBRL(brlAmt), spread: '1.2%' }
+    case 'pix_key_register': {
+      s.pixKeys.push({ id:uid(), type:data.type||'EMAIL', key:data.key||'nova@chave.com', createdAt:now.toISOString() })
+      msg = `Chave PIX ${data.type||'EMAIL'} registrada`
+      details = { type:data.type, key:data.key, status:'ACTIVE' }
+      break
+    }
+    case 'pix_send_crypto': {
+      const usdt = Number(data.usdt || 100)
+      const brl  = Math.round(usdt * s.pricingRate.USDT * 0.988)
+      s.accounts.main.balance += brl
+      s.transactions.unshift({ id:uid(), type:'PIX_IN', amount:brl, desc:`PIX via USDT (${usdt} USDT)`, at:now.toISOString(), status:'CONFIRMED', category:'Cripto' })
+      msg = `PIX via cripto: recebeu ${fmtBRL(brl)} de ${usdt} USDT`
+      details = { usdt, brl:fmtBRL(brl), spread:'1.2%', txHash:`0x${uid()}${uid()}` }
       break
     }
 
-    // ── Pagamentos ───────────────────────────────────────
+    /* ── Pagamentos ─────────────────────── */
+    case 'payment_validate': {
+      msg = `Boleto validado: ${data.barcode?.slice(0,20)||'00000000000'}...`
+      details = { status:'VALID', amount:fmtBRL(cents(data.amount||120)), beneficiary:'Empresa Exemplo LTDA', dueDate:data.dueDate||'2026-06-01' }
+      break
+    }
     case 'payment_schedule': {
-      const amt = Math.round((Number(formData.amount) || 120) * 100)
-      s.payments.push({ id: uid(), amount: amt, barcode: formData.barcode || '00000.00000 00000.000000 00000.000000 0 00000000000000', status: 'PENDING', createdAt: new Date().toISOString() })
-      message = `Pagamento agendado: ${fmtBRL(amt)}`
-      details = { status: 'SCHEDULED', dueDate: formData.dueDate || 'Vencimento em 2 dias' }
+      const amt = cents(data.amount || 120)
+      s.payments.push({ id:uid(), amount:amt, barcode:data.barcode||'00000.00000 00000.000000 0', status:'SCHEDULED', scheduledAt:data.dueDate||now.toISOString(), createdAt:now.toISOString() })
+      msg = `Pagamento agendado: ${fmtBRL(amt)}`
+      details = { status:'SCHEDULED', dueDate:data.dueDate||'2026-06-01', authId:uid() }
       break
     }
     case 'payment_confirm': {
-      const amt = 120000
-      s.account.balance -= amt
-      s.transactions.unshift({ id: uid(), type:'PAYMENT', amount: -amt, description:'Boleto confirmado', createdAt: new Date().toISOString(), status:'CONFIRMED' })
-      message = 'Pagamento confirmado: R$ 1.200,00'
-      details = { status: 'CONFIRMED', authCode: uid() }
+      const amt = s.payments.length ? s.payments[0].amount : cents(data.amount||120)
+      s.accounts.main.balance -= amt
+      s.transactions.unshift({ id:uid(), type:'PAYMENT', amount:-amt, desc:'Boleto Confirmado', at:now.toISOString(), status:'CONFIRMED', category:'Pagamento' })
+      if (s.payments.length) { s.payments[0].status = 'CONFIRMED' }
+      msg = `Pagamento confirmado: ${fmtBRL(amt)}`
+      details = { status:'CONFIRMED', authCode:uid() }
+      break
+    }
+    case 'payment_reject': {
+      if (s.payments.length) s.payments[0].status = 'REJECTED'
+      msg = 'Pagamento rejeitado'
+      details = { status:'REJECTED', reason:data.reason||'FRAUD_SUSPICION' }
       break
     }
 
-    // ── Cobranças ────────────────────────────────────────
+    /* ── Cobranças (Invoice) ─────────────── */
     case 'invoice_create': {
-      const amt = Math.round((Number(formData.amount) || 500) * 100)
-      const inv  = { id: uid(), amountBRL: amt, pixKey: `${uid()}@zetta.bank`, usdtAddr: `0x${uid()}${uid()}`, createdAt: new Date().toISOString(), status: 'PENDING' }
+      const amt = cents(data.amount || 500)
+      const inv = { id:uid(), amount:amt, pixKey:`${uid()}@zetta.bank`, usdtAddr:`0x${uid()}${uid()}`, createdAt:now.toISOString(), status:'PENDING', desc:data.desc||'Cobrança Z-Finance' }
       s.invoices.push(inv)
-      message = `Cobrança criada: ${fmtBRL(amt)}`
-      details = { pixKey: inv.pixKey, usdt: `Endereço: ${inv.usdtAddr.slice(0,20)}...`, status: 'AGUARDANDO_PAGAMENTO' }
+      msg = `Cobrança criada: ${fmtBRL(amt)}`
+      details = { id:inv.id, pixKey:inv.pixKey, usdtAddr:`${inv.usdtAddr.slice(0,18)}...`, status:'PENDING' }
       break
     }
     case 'invoice_pay': {
-      if (s.invoices.length === 0) { message = 'Nenhuma cobrança pendente'; break }
-      const inv = s.invoices[s.invoices.length - 1]
-      s.account.balance += inv.amountBRL
+      const inv = s.invoices.find(i=>i.status==='PENDING')
+      if (!inv) { msg = 'Nenhuma cobrança pendente'; break }
+      s.accounts.main.balance += inv.amount
       inv.status = 'PAID'
-      s.transactions.unshift({ id: uid(), type:'PIX_IN', amount: inv.amountBRL, description:`Pagamento de cobrança ${inv.id.slice(0,8)}`, createdAt: new Date().toISOString(), status:'CONFIRMED' })
-      message = `Cobrança paga: ${fmtBRL(inv.amountBRL)}`
-      details = { invoiceId: inv.id, method: 'PIX', status: 'PAID' }
+      s.transactions.unshift({ id:uid(), type:'PIX_IN', amount:inv.amount, desc:`Cobrança paga — ${inv.id.slice(0,8)}`, at:now.toISOString(), status:'CONFIRMED', category:'Cobrança' })
+      msg = `Cobrança paga: ${fmtBRL(inv.amount)}`
+      details = { invoiceId:inv.id, method:data.method||'PIX', status:'PAID' }
       break
     }
 
-    // ── Transferências ───────────────────────────────────
+    /* ── Transferências ─────────────────── */
     case 'transfer_internal': {
-      const amt = Math.round((Number(formData.amount) || 300) * 100)
-      s.account.balance -= amt
-      s.investments.cdb += amt
-      s.transactions.unshift({ id: uid(), type:'TRANSFER_IN', amount: -amt, description:'Transferência → Conta Investimento', createdAt: new Date().toISOString(), status:'CONFIRMED' })
-      message = `Transferência interna: ${fmtBRL(amt)} para Conta Investimento`
-      details = { from: 'Conta Principal', to: 'Conta Investimento', amount: fmtBRL(amt) }
+      const amt = cents(data.amount || 300)
+      const from = data.from || 'main'
+      const to   = data.to   || 'invest'
+      if (s.accounts[from]) s.accounts[from].balance -= amt
+      if (s.accounts[to])   s.accounts[to].balance   += amt
+      s.transactions.unshift({ id:uid(), type:'TRANSFER_OUT', amount:-amt, desc:`Transferência → ${s.accounts[to]?.label||to}`, at:now.toISOString(), status:'CONFIRMED', category:'Transferência' })
+      msg = `${fmtBRL(amt)} transferidos para ${s.accounts[to]?.label||to}`
+      details = { from, to, amount:fmtBRL(amt), status:'CONFIRMED' }
       break
     }
     case 'withdrawal': {
-      const amt = Math.round((Number(formData.amount) || 100) * 100)
-      s.account.balance -= amt
-      s.transactions.unshift({ id: uid(), type:'WITHDRAWAL', amount: -amt, description:`Saque — ${formData.pix || 'Chave PIX'}`, createdAt: new Date().toISOString(), status:'CONFIRMED' })
-      message = `Saque de ${fmtBRL(amt)} processado`
-      details = { status: 'CONFIRMED', network: 'PIX', txId: uid() }
+      const amt = cents(data.amount || 100)
+      s.accounts.main.balance -= amt
+      s.transactions.unshift({ id:uid(), type:'WITHDRAWAL', amount:-amt, desc:`Saque — ${data.pix||'Chave PIX'}`, at:now.toISOString(), status:'CONFIRMED', category:'Saque' })
+      msg = `Saque de ${fmtBRL(amt)} processado`
+      details = { status:'CONFIRMED', pixKey:data.pix, txId:uid() }
       break
     }
 
-    // ── Cripto ───────────────────────────────────────────
-    case 'crypto_swap': {
-      const fromAmt = Number(formData.amount || 100)
-      const fromCur = formData.from || 'BRL'
-      const toCur   = formData.to   || 'BTC'
-      if (fromCur === 'BRL') {
-        const brlCents = Math.round(fromAmt * 100)
-        const coin     = s.crypto.find(c => c.symbol === toCur)
-        if (coin) {
-          const received = fromAmt / coin.price
-          coin.amount += received
-          s.account.balance -= brlCents
-          message = `Swap: ${fmtBRL(brlCents)} → ${received.toFixed(6)} ${toCur}`
-          details = { sold: fmtBRL(brlCents), received: `${received.toFixed(6)} ${toCur}`, spread: '1.2%', rate: `R$ ${coin.price.toLocaleString('pt-BR')}` }
-        }
-      } else {
-        const coin = s.crypto.find(c => c.symbol === fromCur)
-        if (coin) {
-          const brlReceived = fromAmt * coin.price * (1 - s.pricingRate.spread)
-          coin.amount -= fromAmt
-          s.account.balance += Math.round(brlReceived * 100)
-          message = `Swap: ${fromAmt} ${fromCur} → ${fmtBRL(brlReceived * 100)}`
-          details = { sold: `${fromAmt} ${fromCur}`, received: fmtBRL(brlReceived * 100), spread: '1.2%' }
-        }
-      }
-      if (message) s.transactions.unshift({ id: uid(), type:'TRADE_BUY', amount: -Math.round(fromAmt * 100), description:`Swap ${fromCur} → ${toCur}`, createdAt: new Date().toISOString(), status:'CONFIRMED' })
-      break
-    }
-    case 'pricing_quote': {
-      const pair = formData.pair || 'BTC/BRL'
-      const [base] = pair.split('/')
-      const coin = s.crypto.find(c => c.symbol === base)
-      const price = coin?.price || 345820
-      message = `Cotação ${pair}: R$ ${price.toLocaleString('pt-BR')}`
-      details = { pair, bid: fmtBRL(price * 100 * 0.999), ask: fmtBRL(price * 100 * 1.001), spread: '0.2%', ts: new Date().toISOString() }
-      break
-    }
-    case 'crypto_liquidate': {
-      const coin = s.crypto.find(c => c.symbol !== 'USDT')
-      if (coin && coin.amount > 0) {
-        const half    = coin.amount / 2
-        const brl     = Math.round(half * coin.price * 100)
-        coin.amount  -= half
-        s.account.balance += brl
-        message = `Liquidação: ${half.toFixed(4)} ${coin.symbol} → ${fmtBRL(brl)}`
-        details = { sold: `${half.toFixed(4)} ${coin.symbol}`, received: fmtBRL(brl), status: 'CONFIRMED' }
-        s.transactions.unshift({ id: uid(), type:'TRADE_SELL', amount: brl, description:`Liquidação ${coin.symbol}`, createdAt: new Date().toISOString(), status:'CONFIRMED' })
-      } else {
-        message = 'Sem posição disponível para liquidar'
-      }
-      break
-    }
-
-    // ── Card JIT ─────────────────────────────────────────
+    /* ── Card JIT ───────────────────────── */
     case 'card_authorize': {
-      const amt = Math.round((Number(formData.amount) || 250) * 100)
-      s.account.holds = (s.account.holds || 0) + amt
-      message = `Autorização JIT: ${fmtBRL(amt)} — ${formData.merchant || 'Merchant'}`
-      details = { authCode: uid().toUpperCase(), status: 'HOLD', merchant: formData.merchant || 'Merchant', mcc: formData.mcc || '5411' }
+      const amt = cents(data.amount || 250)
+      s.accounts.main.holds = (s.accounts.main.holds||0) + amt
+      msg = `Autorização JIT: ${fmtBRL(amt)} — ${data.merchant||'Merchant'}`
+      details = { authCode:uid(), status:'HOLD', merchant:data.merchant||'Merchant', mcc:data.mcc||'5411', amount:fmtBRL(amt) }
       break
     }
     case 'card_confirm': {
-      const holdAmt = s.account.holds || 0
-      s.account.balance -= holdAmt
-      s.account.holds    = 0
-      s.transactions.unshift({ id: uid(), type:'CARD_AUTH', amount: -holdAmt, description:'Compra cartão JIT confirmada', createdAt: new Date().toISOString(), status:'CONFIRMED' })
-      message = `Compra confirmada: ${fmtBRL(holdAmt)}`
-      details = { status: 'SETTLED', amount: fmtBRL(holdAmt) }
+      const hold = s.accounts.main.holds || 0
+      if (!hold) { msg='Nenhum hold ativo'; break }
+      s.accounts.main.balance -= hold
+      s.accounts.main.holds   = 0
+      s.card.limitUsed += hold
+      s.transactions.unshift({ id:uid(), type:'CARD_AUTH', amount:-hold, desc:'Compra JIT confirmada', at:now.toISOString(), status:'CONFIRMED', category:'Cartão' })
+      msg = `Compra JIT confirmada: ${fmtBRL(hold)}`
+      details = { status:'SETTLED', amount:fmtBRL(hold) }
       break
     }
     case 'card_reject': {
-      s.account.holds = 0
-      message = 'Autorização rejeitada — hold liberado'
-      details = { status: 'REJECTED', reason: formData.reason || 'Fraude suspeita' }
+      const hold = s.accounts.main.holds || 0
+      s.accounts.main.holds = 0
+      msg = `Compra rejeitada — hold de ${fmtBRL(hold)} liberado`
+      details = { status:'REJECTED', reason:data.reason||'FRAUD_SUSPICION', holdReleased:fmtBRL(hold) }
+      break
+    }
+    case 'card_freeze': {
+      s.card.frozen = true
+      msg = 'Cartão congelado com sucesso'
+      details = { frozen:true, updatedAt:now.toISOString() }
+      break
+    }
+    case 'card_unfreeze': {
+      s.card.frozen = false
+      msg = 'Cartão desbloqueado com sucesso'
+      details = { frozen:false, updatedAt:now.toISOString() }
       break
     }
 
-    // ── KYC ─────────────────────────────────────────────
+    /* ── Cripto / Swap ──────────────────── */
+    case 'crypto_swap': {
+      const from = data.from || 'BRL'
+      const to   = data.to   || 'BTC'
+      const amt  = Number(data.amount || 100)
+      const spread = s.pricingRate.spread
+      if (from === 'BRL') {
+        const brlCents = cents(amt)
+        const coin = s.crypto.find(c=>c.symbol===to)
+        if (coin) {
+          const received = (amt / coin.price) * (1 - spread)
+          coin.amount += received
+          s.accounts.main.balance -= brlCents
+          const fee = brlCents * spread
+          s.transactions.unshift({ id:uid(), type:'TRADE_BUY', amount:-brlCents, desc:`Swap BRL → ${received.toFixed(6)} ${to}`, at:now.toISOString(), status:'CONFIRMED', category:'Cripto' })
+          msg = `Swap: ${fmtBRL(brlCents)} → ${received.toFixed(6)} ${to}`
+          details = { sold:fmtBRL(brlCents), received:`${received.toFixed(6)} ${to}`, fee:fmtBRL(fee), rate:`R$ ${coin.price.toLocaleString('pt-BR')}/${to}`, spread:'1.2%' }
+        }
+      } else {
+        const coin = s.crypto.find(c=>c.symbol===from)
+        if (coin && coin.amount >= amt) {
+          const brl = Math.round(amt * coin.price * (1 - spread) * 100)
+          coin.amount -= amt
+          s.accounts.main.balance += brl
+          s.transactions.unshift({ id:uid(), type:'TRADE_SELL', amount:brl, desc:`Swap ${amt} ${from} → BRL`, at:now.toISOString(), status:'CONFIRMED', category:'Cripto' })
+          msg = `Swap: ${amt} ${from} → ${fmtBRL(brl)}`
+          details = { sold:`${amt} ${from}`, received:fmtBRL(brl), spread:'1.2%', rate:`R$ ${coin.price.toLocaleString('pt-BR')}/${from}` }
+        } else {
+          msg = `Saldo insuficiente de ${from}`
+          details = { error:'INSUFFICIENT_BALANCE', available:coin?.amount||0 }
+        }
+      }
+      break
+    }
+    case 'crypto_pay': {
+      const coin = s.crypto.find(c=>c.symbol===(data.asset||'ETH'))
+      if (!coin) { msg='Ativo não encontrado'; break }
+      const usdAmt = Number(data.amount||50)
+      const coinAmt = usdAmt / (coin.price / 578)
+      coin.amount -= coinAmt
+      msg = `Pago com ${coinAmt.toFixed(6)} ${coin.symbol} ≈ US$ ${usdAmt}`
+      details = { asset:coin.symbol, spent:coinAmt.toFixed(6), usdValue:`$${usdAmt}`, txHash:`0x${uid()}${uid()}`, status:'CONFIRMED' }
+      break
+    }
+    case 'pricing_quote': {
+      const pair = data.pair || 'BTC/BRL'
+      const [base] = pair.split('/')
+      const coin = s.crypto.find(c=>c.symbol===base)
+      const price = coin?.price || 345820
+      const bid = price * 0.999, ask = price * 1.001
+      msg = `Cotação ${pair}: R$ ${price.toLocaleString('pt-BR')}`
+      details = { pair, bid:fmtBRL(bid*100), ask:fmtBRL(ask*100), spread:'0.2%', ts:now.toISOString(), source:'PricingEngine/v2' }
+      break
+    }
+    case 'pricing_update': {
+      s.pricingRate.BTC = s.pricingRate.BTC * (1 + (Math.random()-0.5)*0.02)
+      msg = 'Pricing atualizado com snapshot de mercado'
+      details = { BTC:fmtBRL(s.pricingRate.BTC*100), ETH:fmtBRL(s.pricingRate.ETH*100), updatedAt:now.toISOString() }
+      break
+    }
+    case 'crypto_liquidate': {
+      const coin = s.crypto.find(c=>c.amount > 0 && c.symbol !== 'USDT')
+      if (!coin) { msg='Nenhuma posição para liquidar'; break }
+      const half = coin.amount / 2
+      const brl  = Math.round(half * coin.price * 100)
+      coin.amount -= half
+      s.accounts.main.balance += brl
+      s.transactions.unshift({ id:uid(), type:'TRADE_SELL', amount:brl, desc:`Liquidação ${half.toFixed(4)} ${coin.symbol}`, at:now.toISOString(), status:'CONFIRMED', category:'Cripto' })
+      msg = `Liquidado ${half.toFixed(4)} ${coin.symbol} → ${fmtBRL(brl)}`
+      details = { sold:`${half.toFixed(4)} ${coin.symbol}`, received:fmtBRL(brl), status:'CONFIRMED' }
+      break
+    }
+
+    /* ── KYC ────────────────────────────── */
     case 'kyc_limits': {
       const k = s.kyc
-      message = `KYC ${k.level}: diário ${fmtBRL(k.limits.daily)}, mensal ${fmtBRL(k.limits.monthly)}`
-      details = { level: k.level, daily: fmtBRL(k.limits.daily), monthly: fmtBRL(k.limits.monthly), usedDaily: fmtBRL(k.used.daily) }
+      msg = `KYC ${k.level}: diário ${fmtBRL(k.limits.daily)}, mensal ${fmtBRL(k.limits.monthly)}`
+      details = { level:k.level, status:k.status, daily:fmtBRL(k.limits.daily), monthly:fmtBRL(k.limits.monthly), usedDaily:fmtBRL(k.used.daily), remainingDaily:fmtBRL(k.limits.daily - k.used.daily) }
       break
     }
     case 'kyc_upgrade': {
-      s.kyc.level = 'FULL'
-      s.kyc.limits = { daily: 20000000, monthly: 100000000 }
-      message = 'KYC atualizado para FULL — limites ampliados!'
-      details = { newLevel: 'FULL', newDailyLimit: fmtBRL(20000000), providerRef: uid() }
+      s.kyc.level = 'FULL'; s.kyc.status = 'VERIFIED'
+      s.kyc.limits = { daily:20000000, monthly:100000000 }
+      msg = 'KYC FULL verificado — limites máximos liberados'
+      details = { newLevel:'FULL', daily:fmtBRL(20000000), monthly:fmtBRL(100000000), providerRef:`KYC-${uid()}` }
       break
     }
 
-    // ── Compliance ───────────────────────────────────────
+    /* ── Compliance ─────────────────────── */
     case 'compliance_case': {
-      const c = { id: uid(), type: formData.type || 'SUSPICIOUS_ACTIVITY', status: 'OPEN', riskLevel: 'HIGH', title: formData.title || 'Atividade incomum detectada', createdAt: new Date().toISOString() }
+      const c = { id:uid(), type:data.type||'SUSPICIOUS_ACTIVITY', status:'OPEN', riskLevel:data.risk||'HIGH', title:data.title||'Atividade suspeita detectada', createdAt:now.toISOString() }
       s.compliance.push(c)
-      message = `Case aberto: ${c.title}`
-      details = { caseId: c.id, riskLevel: 'HIGH', status: 'OPEN' }
+      msg = `Case aberto: ${c.title} [${c.riskLevel}]`
+      details = { caseId:c.id, type:c.type, riskLevel:c.riskLevel, status:'OPEN' }
       break
     }
     case 'compliance_event': {
-      message = 'Evento de compliance registrado'
-      details = { eventType: formData.eventType || 'MANUAL_REVIEW', payload: { analyst: 'Sistema Zetta', ts: new Date().toISOString() } }
+      msg = 'Evento de compliance registrado'
+      details = { eventType:data.eventType||'MANUAL_REVIEW', caseId:data.caseId||'—', analyst:'Sistema Zetta', ts:now.toISOString() }
       break
     }
 
-    // ── Pré-cadastro ─────────────────────────────────────
+    /* ── Pre-registration ───────────────── */
     case 'pre_registration': {
-      const pr = { id: uid(), email: formData.email || 'empresa@client.com', status: 'PENDING', createdAt: new Date().toISOString() }
+      const pr = { id:uid(), fullName:data.fullName||'Empresa Exemplo', email:data.email||'empresa@example.com', phone:data.phone||'+5511999999999', status:'PENDING', emailStatus:'TOKEN_SENT', phoneStatus:'PENDING', createdAt:now.toISOString(), expiresAt:new Date(Date.now()+3600000).toISOString() }
       s.preRegistrations.push(pr)
-      message = `Pré-cadastro iniciado para ${pr.email}`
-      details = { id: pr.id, emailStatus: 'TOKEN_SENT', phoneStatus: 'PENDING', expiresAt: new Date(Date.now() + 3600000).toISOString() }
+      msg = `Pré-cadastro iniciado: ${pr.email}`
+      details = { id:pr.id, emailStatus:'TOKEN_SENT', phoneStatus:'PENDING', expiresAt:pr.expiresAt }
+      break
+    }
+    case 'pre_registration_verify': {
+      const pr = s.preRegistrations.find(p=>p.status==='PENDING')
+      if (pr) { pr.emailStatus='VERIFIED'; pr.phoneStatus='VERIFIED'; pr.status='VERIFIED' }
+      msg = 'Contato verificado — pré-cadastro aprovado'
+      details = { status:'VERIFIED', emailStatus:'VERIFIED', phoneStatus:'VERIFIED' }
       break
     }
 
-    // ── Admin ────────────────────────────────────────────
+    /* ── Admin ──────────────────────────── */
     case 'admin_plan_change': {
-      const plan = formData.plan || 'BUSINESS'
-      s.user.plan = plan
-      message = `Plano alterado para ${plan}`
-      details = { userId: s.user.id, newPlan: plan, effectiveAt: new Date().toISOString() }
+      s.user.plan = data.plan || 'BUSINESS'
+      msg = `Plano alterado para ${s.user.plan}`
+      details = { userId:s.user.id, newPlan:s.user.plan, effectiveAt:now.toISOString(), auditId:uid() }
       break
     }
     case 'admin_feature_toggle': {
-      message = `Feature ${formData.feature || 'CRYPTO'} ${formData.enabled ? 'habilitada' : 'desabilitada'}`
-      details = { feature: formData.feature || 'CRYPTO', enabled: formData.enabled ?? true, scope: 'USER_OVERRIDE' }
+      msg = `Feature ${data.feature||'CRYPTO'} ${data.enabled?'habilitada':'desabilitada'}`
+      details = { feature:data.feature, enabled:data.enabled??true, scope:'USER_OVERRIDE', auditId:uid() }
       break
     }
     case 'admin_limit_adjust': {
-      s.kyc.limits.daily = Math.round(Number(formData.daily || 10000) * 100)
-      message = `Limite diário ajustado para ${fmtBRL(s.kyc.limits.daily)}`
-      details = { newDailyLimit: fmtBRL(s.kyc.limits.daily), approvedBy: 'Admin', auditId: uid() }
+      s.kyc.limits.daily = cents(data.daily || 50000)
+      s.kyc.limits.monthly = cents(data.monthly || 200000)
+      msg = `Limites ajustados: diário ${fmtBRL(s.kyc.limits.daily)}`
+      details = { daily:fmtBRL(s.kyc.limits.daily), monthly:fmtBRL(s.kyc.limits.monthly), approvedBy:'ADMIN', auditId:uid() }
+      break
+    }
+    case 'admin_user_block': {
+      s.user.status = 'BLOCKED'
+      msg = 'Usuário bloqueado — acesso suspenso'
+      details = { userId:s.user.id, status:'BLOCKED', reason:data.reason||'COMPLIANCE_REVIEW', ts:now.toISOString() }
       break
     }
 
-    // ── Observabilidade ───────────────────────────────────
-    case 'observability_summary': {
-      message = `Observabilidade: ${s.observability.pendingWebhooks} webhooks pendentes, latência ${s.observability.latencyMs}ms`
-      details = { ...s.observability }
+    /* ── Observability ──────────────────── */
+    case 'obs_summary': {
+      msg = `Sistema: ${s.observability.uptime} uptime, P99 ${s.observability.latencyP99}ms`
+      details = { ...s.observability, traceId:uid(), checkedAt:now.toISOString() }
       break
     }
     case 'audit_archive': {
-      message = 'Arquivo de auditoria gerado e exportado'
-      details = { records: s.transactions.length, exportId: uid(), format: 'JSON', ts: new Date().toISOString() }
+      const log = { id:uid(), action:'AUDIT_EXPORT', entityType:'SYSTEM', data:{ records:s.transactions.length, exportedAt:now.toISOString() }, createdAt:now.toISOString() }
+      s.auditLogs.push(log)
+      msg = `Auditoria exportada: ${s.transactions.length} registros`
+      details = { exportId:log.id, records:s.transactions.length, format:'JSON+NDJSON', ts:now.toISOString() }
+      break
+    }
+    case 'webhook_retry': {
+      s.observability.pendingWebhooks = Math.max(0, s.observability.pendingWebhooks - 1)
+      msg = `Webhook reprocessado — ${s.observability.pendingWebhooks} pendentes`
+      details = { processed:1, remaining:s.observability.pendingWebhooks, deliveredAt:now.toISOString() }
+      break
+    }
+
+    /* ── User Settings ──────────────────── */
+    case 'settings_ux_mode': {
+      s.user.uxMode = data.mode || 'PRO'
+      msg = `Modo UX alterado para ${s.user.uxMode}`
+      details = { uxMode:s.user.uxMode, userId:s.user.id }
+      break
+    }
+    case 'settings_auto_convert': {
+      msg = `Auto-conversão ${data.enabled?'habilitada':'desabilitada'}: ${data.asset||'BTC'}`
+      details = { autoConvertEnabled:data.enabled, asset:data.asset||'BTC', minAmount:fmtBRL(cents(data.min||100)) }
       break
     }
 
     default:
-      message = `Simulação "${action}" executada`
-      details = { action, ts: new Date().toISOString() }
+      msg = `Ação "${action}" executada`
+      details = { action, ts:now.toISOString(), demo:true }
   }
 
-  return { store: s, message, details }
+  return { store:s, msg, details }
 }
 
-/* ─── Formatters ─── */
-export function fmtBRL(cents) {
-  return (Number(cents || 0) / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+/* ── Helpers ────────────────────────────────────────── */
+export const cents = (v) => Math.round(Number(v||0) * 100)
+
+export function cryptoBRL(crypto) {
+  return (crypto||[]).reduce((a,c) => a + c.amount * c.price * 100, 0)
 }
 
-export function fmtBRLFull(cents) {
-  return (Number(cents || 0) / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-}
-
-export function txTypeLabel(type) {
-  const map = {
-    PIX_OUT:     'PIX Enviado',
-    PIX_IN:      'PIX Recebido',
-    TRANSFER_IN: 'Transferência',
-    PAYMENT:     'Pagamento',
-    CARD_AUTH:   'Cartão JIT',
-    TRADE_BUY:   'Compra Cripto',
-    TRADE_SELL:  'Venda Cripto',
-    DEPOSIT:     'Depósito',
-    WITHDRAWAL:  'Saque',
-    REVERSAL:    'Estorno',
-  }
-  return map[type] || type
-}
-
-export function txDirection(type) {
-  const outs = ['PIX_OUT','PAYMENT','CARD_AUTH','TRADE_BUY','WITHDRAWAL']
-  const neutral = ['REVERSAL']
-  if (neutral.includes(type)) return 'neutral'
-  return outs.includes(type) ? 'out' : 'in'
-}
-
-export function relativeTime(iso) {
-  if (!iso) return '—'
-  const diff = Date.now() - new Date(iso).getTime()
-  const mins = Math.floor(diff / 60000)
-  if (mins < 1)   return 'agora'
-  if (mins < 60)  return `${mins}min atrás`
-  const hrs = Math.floor(mins / 60)
-  if (hrs < 24)   return `${hrs}h atrás`
-  const days = Math.floor(hrs / 24)
-  return `${days}d atrás`
-}
-
-export function cryptoBalanceBRL(cryptoList) {
-  return cryptoList.reduce((acc, c) => acc + c.amount * c.price * 100, 0)
-}
-
-export function totalBalance(store) {
-  return store.account.balance +
-    store.investments.cdb + store.investments.tesouro +
-    cryptoBalanceBRL(store.crypto)
+export function totalWealthBRL(store) {
+  const accounts = Object.values(store.accounts).reduce((a,acc) => {
+    if (acc.currency === 'BRL') return a + acc.balance
+    if (acc.currency === 'USD') return a + acc.balance * store.market.USD.rate
+    return a
+  }, 0)
+  const invests = (store.investments.cdb||0) + (store.investments.tesouro||0) + (store.investments.lci||0)
+  return accounts + invests + cryptoBRL(store.crypto)
 }
