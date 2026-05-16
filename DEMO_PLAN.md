@@ -156,17 +156,18 @@ Tarefas:
 
 ### ETAPA 9 — Tela de Welcome / Onboarding
 **Impacto:** Médio — cria narrativa em demos ao vivo  
-**Status:** ⏳ Pendente
+**Status:** ✅ Concluída
 
 Tarefas:
-- [ ] Após login (primeira vez na sessão), exibir welcome screen
-- [ ] Animação sequencial:
-  1. "Z-Pass sendo criado..." (identidade)
-  2. "Contas abertas: BRL, USD, AED" (contas)
-  3. "Nível KYC: FULL verificado" (compliance)
-  4. "Bem-vindo, Rafael. Sua plataforma global está pronta."
-- [ ] Skip disponível
-- [ ] Usar `sessionStorage` para não repetir na mesma sessão
+- [x] Após login (primeira vez na sessão), exibir welcome screen sobre o app
+- [x] Animação sequencial (4 steps, 400ms de delay inicial):
+  1. 🪪 "Z-Pass criado" — identidade digital ativa (1.2s)
+  2. 🌍 "Contas abertas: BRL, USD, AED" (1.2s)
+  3. 🛡️ "KYC: FULL verificado" — FATF LOW, não-PEP (1.2s)
+  4. ✨ "Plataforma global pronta" → mensagem de boas-vindas + botão Começar
+- [x] Cada step: ícone + título + subtítulo + dots bounce quando ativo, checkmark quando completo
+- [x] Botão Skip (X) no canto superior direito
+- [x] sessionStorage `zf_welcomed` — não repete na mesma sessão
 
 ---
 
@@ -195,7 +196,7 @@ Tarefas:
 | 6 | Zion AI Proativo | ✅ Concluída |
 | 7 | Tiers de Cartão | ✅ Concluída |
 | 8 | Centro de Notificações | ✅ Concluída |
-| 9 | Welcome / Onboarding | ⏳ Pendente |
+| 9 | Welcome / Onboarding | ✅ Concluída |
 | 10 | Admin Console Separado | ⏳ Pendente |
 
 ---

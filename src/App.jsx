@@ -11,6 +11,7 @@ import ZPass from './pages/ZPass.jsx'
 import Mais from './pages/Mais.jsx'
 import Toast from './components/Toast.jsx'
 import ZionPanel from './components/ZionPanel.jsx'
+import WelcomeScreen from './components/WelcomeScreen.jsx'
 
 export const AppCtx = createContext(null)
 export const useApp = () => useContext(AppCtx)
@@ -24,6 +25,7 @@ export default function App() {
   const [toasts, setToasts] = useState([])
   const [zionOpen, setZionOpen] = useState(false)
   const [modal, setModal] = useState(null)
+  const [showWelcome, setShowWelcome] = useState(false)
 
   const toast = useCallback((msg, type = 'success') => {
     const id = Date.now()
@@ -47,6 +49,10 @@ export default function App() {
       sessionStorage.setItem('zf_auth', '1')
       setAuthed(true)
       setStore(buildStore())
+      if (!sessionStorage.getItem('zf_welcomed')) {
+        sessionStorage.setItem('zf_welcomed', '1')
+        setShowWelcome(true)
+      }
     } else {
       toast('PIN incorreto', 'error')
     }
@@ -69,6 +75,7 @@ export default function App() {
 
   return (
     <AppCtx.Provider value={{ store, dispatch, toast, modal, setModal, zionOpen, setZionOpen, logout }}>
+      {showWelcome && <WelcomeScreen onDone={() => setShowWelcome(false)} />}
       <Layout page={page} setPage={setPage}>
         <PageComponent />
       </Layout>
