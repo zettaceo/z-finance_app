@@ -7,10 +7,45 @@ function fmt(cents) {
   return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(cents / 100)
 }
 
+const CARD_TIERS = {
+  RETAIL: {
+    label: 'Retail',
+    gradient: 'linear-gradient(135deg, #1E293B 0%, #334155 50%, #475569 100%)',
+    border: 'rgba(148,163,184,0.25)',
+    shadow: 'none',
+    textColor: '#94A3B8',
+    accentColor: '#CBD5E1',
+    chip: 'linear-gradient(135deg, #64748B, #475569)',
+    shimmer: false,
+  },
+  BUSINESS: {
+    label: 'Business',
+    gradient: 'linear-gradient(135deg, #040C1B 0%, #081628 40%, #0C1E38 70%, #818CF820 100%)',
+    border: 'rgba(129,140,248,0.3)',
+    shadow: '0 20px 60px rgba(129,140,248,0.12)',
+    textColor: '#E2E8F0',
+    accentColor: '#818CF8',
+    chip: 'linear-gradient(135deg, #D4A574, #C8954A)',
+    shimmer: false,
+  },
+  INSTITUTIONAL: {
+    label: 'Institutional',
+    gradient: 'linear-gradient(135deg, #0A0A0A 0%, #141414 40%, #0D0D0D 70%, #FBBF2415 100%)',
+    border: 'rgba(251,191,36,0.4)',
+    shadow: '0 24px 80px rgba(251,191,36,0.15)',
+    textColor: '#FBBF24',
+    accentColor: '#FBBF24',
+    chip: 'linear-gradient(135deg, #F59E0B, #D97706)',
+    shimmer: true,
+  },
+}
+
 export default function Cartoes() {
   const { store, dispatch, toast, modal, setModal } = useApp()
   const [cardVisible, setCardVisible] = useState(false)
   const card = store.card
+  const persona = store.persona || 'BUSINESS'
+  const tier = CARD_TIERS[persona] || CARD_TIERS.BUSINESS
 
   const usedPct = (card.limitUsed / card.limit) * 100
 
@@ -39,53 +74,73 @@ export default function Cartoes() {
         position: 'relative', borderRadius: 24, padding: '28px 24px',
         background: card.frozen
           ? 'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)'
-          : 'linear-gradient(135deg, #040C1B 0%, #081628 40%, #0C1E38 70%, #00E59920 100%)',
-        border: card.frozen ? '1px solid #4B5563' : '1px solid rgba(0,229,153,0.3)',
+          : tier.gradient,
+        border: card.frozen ? '1px solid #4B5563' : `1px solid ${tier.border}`,
         marginBottom: 20,
         overflow: 'hidden',
-        minHeight: 190,
-        boxShadow: card.frozen ? 'none' : '0 20px 60px rgba(0,229,153,0.1)',
+        minHeight: 195,
+        boxShadow: card.frozen ? 'none' : tier.shadow,
+        transition: 'all 0.5s ease',
       }}>
-        {/* BG circles */}
-        <div style={{ position: 'absolute', top: -30, right: -30, width: 180, height: 180, borderRadius: '50%', background: card.frozen ? 'rgba(75,85,99,0.15)' : 'rgba(0,229,153,0.06)', pointerEvents: 'none' }} />
-        <div style={{ position: 'absolute', bottom: -50, left: '30%', width: 150, height: 150, borderRadius: '50%', background: card.frozen ? 'rgba(75,85,99,0.1)' : 'rgba(0,229,153,0.04)', pointerEvents: 'none' }} />
+        {/* Shimmer for Institutional */}
+        {tier.shimmer && !card.frozen && (
+          <div style={{
+            position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+            background: 'linear-gradient(105deg, transparent 30%, rgba(251,191,36,0.18) 50%, transparent 70%)',
+            animation: 'goldShimmer 3.5s ease-in-out infinite',
+            pointerEvents: 'none', zIndex: 1,
+          }} />
+        )}
 
-        {/* Chip */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 28 }}>
+        {/* BG orbs */}
+        <div style={{ position: 'absolute', top: -30, right: -30, width: 180, height: 180, borderRadius: '50%', background: card.frozen ? 'rgba(75,85,99,0.15)' : `${tier.accentColor}10`, pointerEvents: 'none' }} />
+        <div style={{ position: 'absolute', bottom: -50, left: '30%', width: 150, height: 150, borderRadius: '50%', background: card.frozen ? 'rgba(75,85,99,0.08)' : `${tier.accentColor}06`, pointerEvents: 'none' }} />
+
+        {/* Chip + brand */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24, position: 'relative', zIndex: 2 }}>
           <div style={{
             width: 44, height: 34, borderRadius: 8,
-            background: 'linear-gradient(135deg, #D4A574, #C8954A)',
+            background: tier.chip,
             boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.2)',
           }}>
             <div style={{ height: '50%', borderBottom: '1px solid rgba(0,0,0,0.15)' }} />
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            {card.frozen && <Snowflake size={16} color="#60A5FA" />}
-            <span style={{ fontFamily: 'Syne,sans-serif', fontWeight: 900, fontSize: 18, color: card.frozen ? '#9CA3AF' : 'rgba(255,255,255,0.9)' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 3 }}>
+            {card.frozen && <Snowflake size={14} color="#60A5FA" />}
+            <span style={{ fontFamily: 'Syne,sans-serif', fontWeight: 900, fontSize: 16, color: card.frozen ? '#9CA3AF' : tier.textColor, letterSpacing: '0.02em' }}>
               Z-Finance
+            </span>
+            <span style={{
+              fontSize: 9, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.12em',
+              color: card.frozen ? '#6B7280' : tier.accentColor,
+              background: card.frozen ? 'rgba(107,114,128,0.15)' : `${tier.accentColor}20`,
+              borderRadius: 5, padding: '2px 6px',
+            }}>
+              {tier.label}
             </span>
           </div>
         </div>
 
         {/* Number */}
         <p style={{
-          fontFamily: 'DM Mono, monospace', fontSize: 20, letterSpacing: '0.2em',
-          color: card.frozen ? '#6B7280' : 'var(--t1)', marginBottom: 20, margin: '0 0 20px',
+          fontFamily: 'DM Mono, monospace', fontSize: 19, letterSpacing: '0.18em',
+          color: card.frozen ? '#6B7280' : tier.textColor, margin: '0 0 20px',
+          position: 'relative', zIndex: 2,
         }}>
           {cardVisible ? '5412 7539 4821 8421' : card.number}
         </p>
 
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', position: 'relative', zIndex: 2 }}>
           <div>
-            <p style={{ fontSize: 10, color: 'var(--t3)', textTransform: 'uppercase', letterSpacing: '0.06em', margin: '0 0 2px' }}>Titular</p>
-            <p style={{ fontSize: 14, fontWeight: 600, color: card.frozen ? '#9CA3AF' : 'var(--t1)', margin: 0, letterSpacing: '0.05em' }}>
+            <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.06em', margin: '0 0 2px' }}>Titular</p>
+            <p style={{ fontSize: 13, fontWeight: 700, color: card.frozen ? '#9CA3AF' : tier.textColor, margin: 0, letterSpacing: '0.05em' }}>
               {store.user.name.toUpperCase()}
             </p>
           </div>
           <div style={{ textAlign: 'right' }}>
-            <p style={{ fontSize: 10, color: 'var(--t3)', textTransform: 'uppercase', letterSpacing: '0.06em', margin: '0 0 2px' }}>Validade</p>
-            <p style={{ fontSize: 14, fontFamily: 'DM Mono, monospace', color: card.frozen ? '#9CA3AF' : 'var(--t1)', margin: 0 }}>
-              {cardVisible ? '12/29' : '••/••'}
+            <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.06em', margin: '0 0 2px' }}>Validade</p>
+            <p style={{ fontSize: 13, fontFamily: 'DM Mono, monospace', color: card.frozen ? '#9CA3AF' : tier.textColor, margin: 0 }}>
+              {cardVisible ? card.exp : '••/••'}
             </p>
           </div>
         </div>
@@ -93,7 +148,7 @@ export default function Cartoes() {
         {card.frozen && (
           <div style={{
             position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
-            background: 'rgba(4,12,27,0.4)', backdropFilter: 'blur(2px)', borderRadius: 24,
+            background: 'rgba(4,12,27,0.5)', backdropFilter: 'blur(3px)', borderRadius: 24, zIndex: 3,
           }}>
             <div style={{ textAlign: 'center' }}>
               <Snowflake size={36} color="#60A5FA" style={{ marginBottom: 8 }} />

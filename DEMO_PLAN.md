@@ -124,14 +124,14 @@ Tarefas:
 
 ### ETAPA 7 — Tiers de Cartão Visual
 **Impacto:** Médio — reforça diferenciação por persona  
-**Status:** ⏳ Pendente
+**Status:** ✅ Concluída
 
 Tarefas:
-- [ ] RETAIL: cartão cinza/slate com gradiente sutil
-- [ ] BUSINESS: cartão escuro azul-marinho (atual)
-- [ ] INSTITUTIONAL: cartão preto metal com reflexos dourados animados
-- [ ] Trocar automaticamente conforme persona ativa
-- [ ] Nome do tier estampado no cartão
+- [x] RETAIL: cartão slate/cinza (`#1E293B → #334155 → #475569`), chip cinza, texto slate
+- [x] BUSINESS: cartão azul-marinho escuro com acento índigo (atual, refinado)
+- [x] INSTITUTIONAL: cartão preto-metal (`#0A0A0A`), chip dourado, reflexo áureo animado (`goldShimmer` 3.5s)
+- [x] Troca automática ao mudar persona no PersonaSwitcher
+- [x] Nome do tier estampado no canto superior direito do cartão (badge colorido)
 
 ---
 
@@ -191,7 +191,7 @@ Tarefas:
 | 4 | Z-Pass | ✅ Concluída |
 | 5 | PIX Internacional | ✅ Concluída |
 | 6 | Zion AI Proativo | ✅ Concluída |
-| 7 | Tiers de Cartão | ⏳ Pendente |
+| 7 | Tiers de Cartão | ✅ Concluída |
 | 8 | Centro de Notificações | ⏳ Pendente |
 | 9 | Welcome / Onboarding | ⏳ Pendente |
 | 10 | Admin Console Separado | ⏳ Pendente |

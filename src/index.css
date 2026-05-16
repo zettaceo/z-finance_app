@@ -697,6 +697,13 @@ select.input option { background:var(--surface-2); color:var(--t1); }
   to{opacity:1;transform:translateX(0)}
 }
 
+@keyframes goldShimmer {
+  0%   { transform: translateX(-120%) skewX(-15deg); opacity: 0 }
+  30%  { opacity: 0.6 }
+  70%  { opacity: 0.6 }
+  100% { transform: translateX(200%) skewX(-15deg); opacity: 0 }
+}
+
 /* ── App shell (wraps sidebar + main) ───────────────── */
 .app-shell {
   display:flex;
