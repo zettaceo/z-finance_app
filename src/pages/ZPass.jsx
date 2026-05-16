@@ -65,7 +65,8 @@ export default function ZPass() {
   const u = store.user
   const reg = store.regulatoryProfile
   const planCfg = PLAN_COLORS[store.persona] || PLAN_COLORS.BUSINESS
-  const zpId = `ZP-${u.id.slice(0, 4).toUpperCase()}-${u.id.slice(4, 8).toUpperCase()}`
+  const idHash = (u.id || '').replace(/-/g, '').slice(-8).toUpperCase().padStart(8, 'F')
+  const zpId = `ZP-${idHash.slice(0, 4)}-${idHash.slice(4, 8)}`
 
   const verifiedAt = new Date(Date.now() - 60 * 86400000)
   const nextReview = new Date(Date.now() + 150 * 86400000)
@@ -256,7 +257,7 @@ export default function ZPass() {
       <button
         onClick={handleExport}
         style={{
-          width: '100%', padding: '16px', borderRadius: 16, border: 'none', cursor: 'pointer',
+          width: '100%', padding: '16px', borderRadius: 16, cursor: 'pointer',
           background: exported
             ? 'rgba(52,211,153,0.15)'
             : 'linear-gradient(135deg, rgba(0,229,153,0.15), rgba(129,140,248,0.1))',

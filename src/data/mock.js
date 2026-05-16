@@ -317,7 +317,7 @@ export function simulate(store, action, data = {}) {
       const fee = Math.round(amt * 0.002)
       s.accounts.main.balance -= amt + fee
       s.kyc.used.daily = (s.kyc.used.daily || 0) + amt
-      s.transactions.unshift({ id:uid(), type:'PIX_OUT', amount:-(amt+fee), desc:`PIX → ${data.receiver||'Destinatário'}`, at:now.toISOString(), status:'CONFIRMED', category:'PIX' })
+      s.transactions.unshift({ id:uid(), type:'PIX_OUT', amount:-(amt+fee), desc:`PIX → ${data.key||data.receiver||'Destinatário'}`, at:now.toISOString(), status:'CONFIRMED', category:'PIX' })
       msg = `PIX enviado: ${fmtBRL(amt)} (taxa ${fmtBRL(fee)})`
       details = { endToEndId:`E${uid()}`, status:'CONFIRMED', fee:fmtBRL(fee), net:fmtBRL(amt-fee) }
       break

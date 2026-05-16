@@ -391,7 +391,7 @@ export default function Investir() {
                 padding: '14px 20px', borderBottom: i < arr.length - 1 ? '1px solid var(--border)' : 'none',
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <span style={{ fontSize: 18 }}>{cur === 'USD' ? '🇺🇸' : cur === 'EUR' ? '🇪🇺' : '🇬🇧'}</span>
+                  <span style={{ fontSize: 18 }}>{cur === 'USD' ? '🇺🇸' : cur === 'EUR' ? '🇪🇺' : cur === 'AED' ? '🇦🇪' : cur === 'GBP' ? '🇬🇧' : '💱'}</span>
                   <div>
                     <p style={{ fontWeight: 600, fontSize: 14, color: 'var(--t1)', margin: 0 }}>BRL/{cur}</p>
                     <p style={{ fontSize: 12, color: 'var(--t3)', margin: 0 }}>Compra</p>

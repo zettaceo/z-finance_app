@@ -4,6 +4,7 @@ import { AreaChart, Area, ResponsiveContainer, Tooltip, XAxis } from 'recharts'
 import { useApp } from '../App.jsx'
 import SimModal from '../components/SimModal.jsx'
 import { PERSONA_CFG } from '../components/PersonaSwitcher.jsx'
+import { relTime } from '../data/mock.js'
 
 function fmt(cents, cur = 'BRL') {
   const val = cents / 100
@@ -19,7 +20,15 @@ function fmtCrypto(amount, symbol) {
   return `${amount.toFixed(2)} ${symbol}`
 }
 
-const TX_ICONS = { pix: '⚡', payment: '📄', crypto: '₿', transfer: '↔', card: '💳', invoice: '🧾' }
+const TX_ICONS = {
+  PIX_OUT: '⚡', PIX_IN: '⚡',
+  PAYMENT: '📄',
+  CARD_AUTH: '💳',
+  TRADE_BUY: '₿', TRADE_SELL: '₿',
+  TRANSFER_IN: '↔', TRANSFER_OUT: '↔',
+  DEPOSIT: '⬇', WITHDRAWAL: '⬆',
+  REVERSAL: '↺',
+}
 
 const CRYPTO_COLORS = { BTC: '#F7931A', ETH: '#627EEA', SOL: '#9945FF', USDT: '#26A17B' }
 
@@ -425,9 +434,8 @@ export default function Home() {
           <span style={{ fontSize: 12, color: 'var(--t3)' }}>{store.transactions.length} total</span>
         </div>
         {recentTx.map((tx, i) => {
-          const isCredit = tx.type === 'credit' || tx.amount > 0
           return (
-            <div key={tx.id || i} style={{
+            <div key={tx.id} style={{
               display: 'flex', alignItems: 'center', gap: 14,
               padding: '14px 20px',
               borderBottom: i < recentTx.length - 1 ? '1px solid var(--border)' : 'none',
@@ -438,13 +446,13 @@ export default function Home() {
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 fontSize: 17,
               }}>
-                {TX_ICONS[tx.category] || '💰'}
+                {TX_ICONS[tx.type] || '💰'}
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <p style={{ fontWeight: 600, fontSize: 14, color: 'var(--t1)', margin: '0 0 2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                  {tx.description}
+                  {tx.desc}
                 </p>
-                <p style={{ fontSize: 12, color: 'var(--t3)', margin: 0 }}>{tx.date} • {tx.category}</p>
+                <p style={{ fontSize: 12, color: 'var(--t3)', margin: 0 }}>{relTime(tx.at)} • {tx.category}</p>
               </div>
               <span style={{
                 fontFamily: 'DM Mono, monospace',
