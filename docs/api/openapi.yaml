@@ -1,0 +1,1611 @@
+openapi: 3.0.3
+info:
+  title: Z-FINANCE Core API
+  version: 0.1.0
+  description: API inicial para demo do Z-FINANCE (nao custodial, ledger append-only).
+servers:
+  - url: http://localhost:8080
+  - url: http://95.111.247.134:8080
+tags:
+  - name: Health
+  - name: Auth
+  - name: PreRegistration
+  - name: Ledger
+  - name: Transactions
+  - name: Pix
+  - name: Payments
+  - name: CardJIT
+  - name: Crypto
+  - name: Pricing
+  - name: Admin
+  - name: KYC
+  - name: Settings
+  - name: Invoices
+  - name: Withdrawals
+  - name: PreRegistration
+security:
+  - BearerAuth: []
+paths:
+  /health:
+    get:
+      tags: [Health]
+      summary: Health check basico
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Envelope"
+  /health/db:
+    get:
+      tags: [Health]
+      summary: Health check do banco
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Envelope"
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: Login com email/senha
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+      responses:
+        "200":
+          description: Tokens gerados
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Envelope"
+  /auth/refresh:
+    post:
+      tags: [Auth]
+      summary: Rotaciona refresh token
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RefreshRequest"
+      responses:
+        "200":
+          description: Tokens renovados
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Envelope"
+  /auth/me:
+    get:
+      tags: [Auth]
+      summary: Retorna capability snapshot da sessao
+      responses:
+        "200":
+          description: Contexto de sessao
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Envelope"
+  /auth/logout:
+    post:
+      tags: [Auth]
+      summary: Revoga refresh token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RefreshRequest"
+      responses:
+        "200":
+          description: Logout OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Envelope"
+  /pre-registrations:
+    post:
+      tags: [PreRegistration]
+      summary: Inicia pre-cadastro institucional
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PreRegistrationRequest"
+      responses:
+        "201":
+          description: Pre-cadastro criado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Envelope"
+  /pre-registrations/verify/email:
+    post:
+      tags: [PreRegistration]
+      summary: Verifica email do pre-cadastro
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PreRegistrationVerifyRequest"
+      responses:
+        "200":
+          description: Email verificado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Envelope"
+  /pre-registrations/verify/phone:
+    post:
+      tags: [PreRegistration]
+      summary: Verifica telefone do pre-cadastro
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PreRegistrationVerifyRequest"
+      responses:
+        "200":
+          description: Telefone verificado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Envelope"
+  /pre-registrations/lookup:
+    get:
+      tags: [PreRegistration]
+      summary: Consulta status de pre-cadastro por email ou telefone
+      security: []
+      parameters:
+        - in: query
+          name: email
+          schema:
+            type: string
+        - in: query
+          name: phone
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Status de pre-cadastro
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Envelope"
+  /pre-registrations:
+    post:
+      tags: [PreRegistration]
+      summary: Inicia pre-cadastro institucional
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PreRegistrationRequest"
+      responses:
+        "201":
+          description: Pre-cadastro iniciado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Envelope"
+  /pre-registrations/verify/email:
+    get:
+      tags: [PreRegistration]
+      summary: Verifica email do pre-cadastro
+      security: []
+      parameters:
+        - in: query
+          name: pre_registration_id
+          schema: { type: string }
+          required: true
+        - in: query
+          name: token
+          schema: { type: string }
+          required: true
+      responses:
+        "200":
+          description: Email verificado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Envelope"
+    post:
+      tags: [PreRegistration]
+      summary: Verifica email do pre-cadastro via payload
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PreRegistrationVerifyRequest"
+      responses:
+        "200":
+          description: Email verificado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Envelope"
+  /pre-registrations/verify/phone:
+    post:
+      tags: [PreRegistration]
+      summary: Verifica telefone do pre-cadastro
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PreRegistrationVerifyRequest"
+      responses:
+        "200":
+          description: Telefone verificado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Envelope"
+  /pre-registrations/lookup:
+    get:
+      tags: [PreRegistration]
+      summary: Consulta pre-cadastro por email/telefone
+      security: []
+      parameters:
+        - in: query
+          name: email
+          schema: { type: string }
+        - in: query
+          name: phone
+          schema: { type: string }
+      responses:
+        "200":
+          description: Resultado da consulta
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Envelope"
+  /transactions:
+    post:
+      tags: [Transactions]
+      summary: Cria transacao (ledger)
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateTransactionRequest"
+      responses:
+        "201":
+          description: Transacao criada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Envelope"
+    get:
+      tags: [Transactions]
+      summary: Lista transacoes por conta
+      parameters:
+        - in: query
+          name: account_id
+          schema: { type: string }
+          required: true
+        - in: query
+          name: limit
+          schema: { type: integer }
+        - in: query
+          name: from
+          schema: { type: string }
+        - in: query
+          name: to
+          schema: { type: string }
+        - in: query
+          name: cursor
+          schema: { type: string }
+      responses:
+        "200":
+          description: Lista de transacoes
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Envelope"
+  /transactions/confirm:
+    post:
+      tags: [Transactions]
+      summary: Confirma transacao em HOLD
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ConfirmTransactionRequest"
+      responses:
+        "200":
+          description: Transacao confirmada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Envelope"
+  /transactions/reject:
+    post:
+      tags: [Transactions]
+      summary: Rejeita transacao em HOLD
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ConfirmTransactionRequest"
+      responses:
+        "200":
+          description: Transacao rejeitada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Envelope"
+  /transactions/reverse:
+    post:
+      tags: [Transactions]
+      summary: Cria reversal de transacao confirmada
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReversalRequest"
+      responses:
+        "201":
+          description: Reversal criado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Envelope"
+  /accounts/{id}/balance:
+    get:
+      tags: [Ledger]
+      summary: Saldo calculado por ledger
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Saldo atual
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Envelope"
+  /pix/keys:
+    post:
+      tags: [Pix]
+      summary: Registra chave Pix
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PixKeyRequest"
+      responses:
+        "201":
+          description: Chave criada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Envelope"
+  /pix/send:
+    post:
+      tags: [Pix]
+      summary: Envia Pix
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PixSendRequest"
+      responses:
+        "201":
+          description: Pix criado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Envelope"
+  /pix/send/crypto:
+    post:
+      tags: [Pix]
+      summary: Envia Pix a partir de cripto
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PixFromCryptoRequest"
+      responses:
+        "201":
+          description: Pix criado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Envelope"
+  /payments/validate:
+    post:
+      tags: [Payments]
+      summary: Valida linha digitavel
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PaymentValidateRequest"
+      responses:
+        "200":
+          description: Validacao
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Envelope"
+  /payments/schedule:
+    post:
+      tags: [Payments]
+      summary: Agenda pagamento
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PaymentScheduleRequest"
+      responses:
+        "201":
+          description: Pagamento criado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Envelope"
+  /card/authorize:
+    post:
+      tags: [CardJIT]
+      summary: Autoriza transacao de cartao JIT
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CardAuthorizeRequest"
+      responses:
+        "200":
+          description: Resultado da autorizacao
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Envelope"
+  /crypto/swap:
+    post:
+      tags: [Crypto]
+      summary: Swap fiat/cripto
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SwapRequest"
+      responses:
+        "201":
+          description: Swap criado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Envelope"
+  /crypto/pay:
+    post:
+      tags: [Crypto]
+      summary: Compra cripto com fiat e transfere
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CryptoPayRequest"
+      responses:
+        "201":
+          description: Transferencia criada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Envelope"
+  /pricing/quote:
+    get:
+      tags: [Pricing]
+      summary: Consulta cotacao
+      security: []
+      parameters:
+        - in: query
+          name: pair
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Cotacao
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Envelope"
+    put:
+      tags: [Pricing]
+      summary: Atualiza cotacao
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/QuoteRequest"
+      responses:
+        "200":
+          description: Cotacao atualizada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Envelope"
+  /admin/plans:
+    get:
+      tags: [Admin]
+      summary: Lista planos cadastrados
+      responses:
+        "200":
+          description: Lista de planos
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Envelope"
+    post:
+      tags: [Admin]
+      summary: Cria novo plano
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminPlanRequest"
+      responses:
+        "201":
+          description: Plano criado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Envelope"
+  /admin/user-plans:
+    post:
+      tags: [Admin]
+      summary: Atribui plano a usuario
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminUserPlanRequest"
+      responses:
+        "201":
+          description: Plano atribuido
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Envelope"
+  /admin/pricing/rules:
+    get:
+      tags: [Admin]
+      summary: Lista pricing rules (com filtros)
+      parameters:
+        - in: query
+          name: plan_id
+          schema: { type: string }
+        - in: query
+          name: user_type
+          schema: { type: string }
+        - in: query
+          name: operation_type
+          schema: { type: string }
+        - in: query
+          name: asset
+          schema: { type: string }
+        - in: query
+          name: pricing_version_id
+          schema: { type: string }
+      responses:
+        "200":
+          description: Lista de pricing rules
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Envelope"
+    post:
+      tags: [Admin]
+      summary: Cria pricing rule
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminPricingRuleRequest"
+      responses:
+        "201":
+          description: Pricing rule criada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Envelope"
+  /admin/pricing/rules/{id}:
+    put:
+      tags: [Admin]
+      summary: Atualiza pricing rule
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminPricingRuleRequest"
+      responses:
+        "200":
+          description: Pricing rule atualizada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Envelope"
+  /admin/pricing/versions:
+    get:
+      tags: [Admin]
+      summary: Lista versoes de pricing
+      responses:
+        "200":
+          description: Lista versoes
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Envelope"
+    post:
+      tags: [Admin]
+      summary: Cria versao de pricing
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                code: { type: string }
+                description: { type: string }
+                status: { type: string }
+                valid_from: { type: string }
+                valid_until: { type: string }
+      responses:
+        "201":
+          description: Versao criada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Envelope"
+  /admin/pricing/versions/active:
+    get:
+      tags: [Admin]
+      summary: Retorna a versao ativa de pricing
+      responses:
+        "200":
+          description: Versao ativa
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Envelope"
+  /admin/pricing/versions/{id}:
+    put:
+      tags: [Admin]
+      summary: Atualiza status da versao de pricing
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status: { type: string }
+      responses:
+        "200":
+          description: Status atualizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Envelope"
+  /admin/plan-features:
+    get:
+      tags: [Admin]
+      summary: Lista features por plano
+      parameters:
+        - in: query
+          name: plan_id
+          schema: { type: string }
+      responses:
+        "200":
+          description: Lista de features
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Envelope"
+    put:
+      tags: [Admin]
+      summary: Cria/atualiza feature do plano
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                plan_id: { type: string }
+                feature_code: { type: string }
+                enabled: { type: boolean }
+                metadata: { type: object }
+      responses:
+        "200":
+          description: Feature atualizada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Envelope"
+  /admin/plan-limits:
+    get:
+      tags: [Admin]
+      summary: Lista limites por plano
+      parameters:
+        - in: query
+          name: plan_id
+          schema: { type: string }
+      responses:
+        "200":
+          description: Lista de limites
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Envelope"
+    put:
+      tags: [Admin]
+      summary: Cria/atualiza limite do plano
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                plan_id: { type: string }
+                limit_code: { type: string }
+                limit_value: { type: integer }
+                limit_window: { type: string }
+      responses:
+        "200":
+          description: Limite atualizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Envelope"
+  /admin/pricing/campaigns:
+    get:
+      tags: [Admin]
+      summary: Lista campanhas de pricing
+      responses:
+        "200":
+          description: Lista campanhas
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Envelope"
+    post:
+      tags: [Admin]
+      summary: Cria campanha de pricing
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                code: { type: string }
+                description: { type: string }
+                status: { type: string }
+                priority: { type: integer }
+                valid_from: { type: string }
+                valid_until: { type: string }
+      responses:
+        "201":
+          description: Campanha criada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Envelope"
+  /admin/pricing/campaigns/{id}:
+    put:
+      tags: [Admin]
+      summary: Atualiza status da campanha
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status: { type: string }
+      responses:
+        "200":
+          description: Status atualizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Envelope"
+  /admin/pricing/campaigns/rules:
+    get:
+      tags: [Admin]
+      summary: Lista regras de campanha
+      parameters:
+        - in: query
+          name: campaign_id
+          schema: { type: string }
+        - in: query
+          name: plan_id
+          schema: { type: string }
+        - in: query
+          name: user_type
+          schema: { type: string }
+        - in: query
+          name: operation_type
+          schema: { type: string }
+      responses:
+        "200":
+          description: Lista regras
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Envelope"
+    post:
+      tags: [Admin]
+      summary: Cria regra de campanha
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                campaign_id: { type: string }
+                plan_id: { type: string }
+                user_type: { type: string }
+                operation_type: { type: string }
+                asset: { type: string }
+                fee_type: { type: string }
+                fee_value: { type: integer }
+                min_fee: { type: integer }
+                max_fee: { type: integer }
+      responses:
+        "201":
+          description: Regra criada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Envelope"
+  /admin/roles:
+    get:
+      tags: [Admin]
+      summary: Lista roles disponiveis
+      responses:
+        "200":
+          description: Lista roles
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Envelope"
+    post:
+      tags: [Admin]
+      summary: Cria role
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                code: { type: string }
+                description: { type: string }
+      responses:
+        "201":
+          description: Role criada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Envelope"
+  /admin/user-roles:
+    get:
+      tags: [Admin]
+      summary: Lista roles por usuario
+      parameters:
+        - in: query
+          name: user_id
+          schema: { type: string }
+      responses:
+        "200":
+          description: Lista roles do usuario
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Envelope"
+    post:
+      tags: [Admin]
+      summary: Atribui role ao usuario
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                user_id: { type: string }
+                role_code: { type: string }
+      responses:
+        "201":
+          description: Role atribuida
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Envelope"
+    delete:
+      tags: [Admin]
+      summary: Remove role do usuario
+      parameters:
+        - in: query
+          name: user_id
+          schema: { type: string }
+        - in: query
+          name: role_code
+          schema: { type: string }
+      responses:
+        "200":
+          description: Role removida
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Envelope"
+  /admin/roles/separation:
+    get:
+      tags: [Admin]
+      summary: Lista regras de separation of duties
+      responses:
+        "200":
+          description: Lista regras
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Envelope"
+    post:
+      tags: [Admin]
+      summary: Cria regra de separation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                role_code_a: { type: string }
+                role_code_b: { type: string }
+                reason: { type: string }
+      responses:
+        "201":
+          description: Regra criada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Envelope"
+    delete:
+      tags: [Admin]
+      summary: Remove regra de separation
+      parameters:
+        - in: query
+          name: role_code_a
+          schema: { type: string }
+        - in: query
+          name: role_code_b
+          schema: { type: string }
+      responses:
+        "200":
+          description: Regra removida
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Envelope"
+  /admin/regulatory-profiles:
+    get:
+      tags: [Admin]
+      summary: Consulta perfil regulatorio por usuario
+      parameters:
+        - in: query
+          name: user_id
+          schema: { type: string }
+      responses:
+        "200":
+          description: Perfil regulatorio
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Envelope"
+    put:
+      tags: [Admin]
+      summary: Cria/atualiza perfil regulatorio
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                user_id: { type: string }
+                jurisdiction_code: { type: string }
+                jurisdiction_risk: { type: string }
+                aml_tier: { type: string }
+                travel_rule_required: { type: boolean }
+                sanctions_screening_required: { type: boolean }
+      responses:
+        "200":
+          description: Perfil atualizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Envelope"
+  /admin/reconcile/summary:
+    get:
+      tags: [Admin]
+      summary: Resumo de pendencias para reconciliacao
+      parameters:
+        - in: query
+          name: older_than_minutes
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Resumo de pendencias
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Envelope"
+  /admin/reconcile/pending:
+    get:
+      tags: [Admin]
+      summary: Lista pendencias para reconciliacao
+      parameters:
+        - in: query
+          name: type
+          schema: { type: string }
+        - in: query
+          name: older_than_minutes
+          schema: { type: integer }
+        - in: query
+          name: limit
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Lista de pendencias
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Envelope"
+  /admin/webhooks/retry:
+    get:
+      tags: [Admin]
+      summary: Lista retries de webhooks por status
+      parameters:
+        - in: query
+          name: status
+          schema: { type: string, enum: [PENDING, PROCESSING, SUCCEEDED, DEAD] }
+        - in: query
+          name: limit
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Lista de retries
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Envelope"
+  /admin/observability/summary:
+    get:
+      tags: [Admin]
+      summary: Resumo de observabilidade (reconcile + retries)
+      parameters:
+        - in: query
+          name: older_than_minutes
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Resumo de pendencias e retries
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Envelope"
+  /admin/audit/logs:
+    get:
+      tags: [Admin]
+      summary: Lista auditoria com filtros
+      parameters:
+        - in: query
+          name: user_id
+          schema: { type: string }
+        - in: query
+          name: action
+          schema: { type: string }
+        - in: query
+          name: entity_type
+          schema: { type: string }
+        - in: query
+          name: from
+          schema: { type: string, format: date-time }
+        - in: query
+          name: to
+          schema: { type: string, format: date-time }
+        - in: query
+          name: limit
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Lista de auditorias
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Envelope"
+  /admin/alerts/check:
+    get:
+      tags: [Admin]
+      summary: Avalia alertas operacionais por thresholds
+      parameters:
+        - in: query
+          name: older_than_minutes
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Lista alertas detectados
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Envelope"
+  /kyc/limits:
+    get:
+      tags: [KYC]
+      summary: Lista limites KYC
+      parameters:
+        - in: query
+          name: level
+          schema: { type: string }
+      responses:
+        "200":
+          description: Limites
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Envelope"
+    put:
+      tags: [KYC]
+      summary: Atualiza limite KYC
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/KycLimitRequest"
+      responses:
+        "200":
+          description: Limite atualizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Envelope"
+  /kyc/upgrade:
+    post:
+      tags: [KYC]
+      summary: Atualiza perfil KYC
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/KycUpgradeRequest"
+      responses:
+        "200":
+          description: KYC atualizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Envelope"
+  /user/settings:
+    get:
+      tags: [Settings]
+      summary: Busca settings do usuario
+      parameters:
+        - in: query
+          name: user_id
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Settings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Envelope"
+    put:
+      tags: [Settings]
+      summary: Atualiza settings do usuario
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserSettingsRequest"
+      responses:
+        "200":
+          description: Settings atualizados
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Envelope"
+  /invoices:
+    post:
+      tags: [Invoices]
+      summary: Cria invoice hibrido
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateInvoiceRequest"
+      responses:
+        "201":
+          description: Invoice criado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Envelope"
+  /invoices/pay:
+    post:
+      tags: [Invoices]
+      summary: Paga invoice
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PayInvoiceRequest"
+      responses:
+        "201":
+          description: Invoice pago
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Envelope"
+  /withdrawals:
+    post:
+      tags: [Withdrawals]
+      summary: Cria saque
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WithdrawalRequest"
+      responses:
+        "201":
+          description: Saque criado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Envelope"
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    IdempotencyKey:
+      in: header
+      name: Idempotency-Key
+      required: true
+      schema:
+        type: string
+  schemas:
+    Envelope:
+      type: object
+      properties:
+        data: { type: object }
+        error: { type: object }
+        request_id: { type: string }
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email: { type: string }
+        password: { type: string }
+    RefreshRequest:
+      type: object
+      required: [refresh_token]
+      properties:
+        refresh_token: { type: string }
+    PreRegistrationRequest:
+      type: object
+      required: [full_name, email, phone]
+      properties:
+        full_name: { type: string }
+        email: { type: string }
+        phone: { type: string }
+    PreRegistrationVerifyRequest:
+      type: object
+      required: [pre_registration_id, token]
+      properties:
+        pre_registration_id: { type: string }
+        token: { type: string }
+    PreRegistrationResponse:
+      type: object
+      properties:
+        id: { type: string }
+        status: { type: string }
+        email_status: { type: string }
+        phone_status: { type: string }
+        email_verified: { type: boolean }
+        phone_verified: { type: boolean }
+        expires_at: { type: string }
+        created_at: { type: string }
+        updated_at: { type: string }
+    PreRegistrationLookupResponse:
+      type: object
+      properties:
+        state: { type: string }
+        pre_registration:
+          $ref: "#/components/schemas/PreRegistrationResponse"
+    CreateTransactionRequest:
+      type: object
+      required: [account_id, user_id, type, amount]
+      properties:
+        account_id: { type: string }
+        user_id: { type: string }
+        type: { type: string }
+        status: { type: string }
+        amount: { type: integer }
+        fee: { type: integer }
+        net_amount: { type: integer }
+        external_ref: { type: string }
+        occurred_at: { type: string }
+    ConfirmTransactionRequest:
+      type: object
+      required: [transaction_id]
+      properties:
+        transaction_id: { type: string }
+    ReversalRequest:
+      type: object
+      required: [transaction_id]
+      properties:
+        transaction_id: { type: string }
+        reason: { type: string }
+    PixKeyRequest:
+      type: object
+      required: [user_id, account_id, type, key]
+      properties:
+        user_id: { type: string }
+        account_id: { type: string }
+        type: { type: string }
+        key: { type: string }
+    PixSendRequest:
+      type: object
+      required: [user_id, account_id, amount]
+      properties:
+        user_id: { type: string }
+        account_id: { type: string }
+        amount: { type: integer }
+        fee: { type: integer }
+        net_amount: { type: integer }
+        external_ref: { type: string }
+        metadata: { type: object }
+    PixFromCryptoRequest:
+      type: object
+      required: [user_id, account_id, amount_brl, asset]
+      properties:
+        user_id: { type: string }
+        account_id: { type: string }
+        amount_brl: { type: integer }
+        asset: { type: string }
+        external_ref: { type: string }
+    PaymentValidateRequest:
+      type: object
+      required: [barcode]
+      properties:
+        barcode: { type: string }
+    PaymentScheduleRequest:
+      type: object
+      required: [user_id, account_id, amount]
+      properties:
+        user_id: { type: string }
+        account_id: { type: string }
+        amount: { type: integer }
+        fee: { type: integer }
+        net_amount: { type: integer }
+        barcode: { type: string }
+        scheduled_at: { type: string }
+        due_date: { type: string }
+        external_ref: { type: string }
+    CardAuthorizeRequest:
+      type: object
+      required: [user_id, account_id, amount]
+      properties:
+        user_id: { type: string }
+        account_id: { type: string }
+        amount: { type: integer }
+        fee: { type: integer }
+        net_amount: { type: integer }
+        merchant_name: { type: string }
+        merchant_mcc: { type: string }
+        auth_code: { type: string }
+        external_ref: { type: string }
+    SwapRequest:
+      type: object
+      required: [user_id, debit_account_id, credit_account_id, side, base_currency, quote_currency, price, quantity]
+      properties:
+        user_id: { type: string }
+        debit_account_id: { type: string }
+        credit_account_id: { type: string }
+        side: { type: string }
+        base_currency: { type: string }
+        quote_currency: { type: string }
+        price: { type: integer }
+        quantity: { type: integer }
+        fee: { type: integer }
+        external_ref: { type: string }
+        auto_execute: { type: boolean }
+    CryptoPayRequest:
+      type: object
+      required: [user_id, fiat_amount, destination]
+      properties:
+        user_id: { type: string }
+        fiat_amount: { type: integer }
+        destination: { type: string }
+    QuoteRequest:
+      type: object
+      required: [pair, price, ttl_seconds]
+      properties:
+        pair: { type: string }
+        price: { type: integer }
+        ttl_seconds: { type: integer }
+        source: { type: string }
+    AdminPlanRequest:
+      type: object
+      required: [code]
+      properties:
+        code: { type: string }
+        description: { type: string }
+        monthly_price_cents: { type: integer }
+    AdminUserPlanRequest:
+      type: object
+      required: [user_id]
+      properties:
+        user_id: { type: string }
+        plan_id: { type: string }
+        plan_code: { type: string }
+        valid_from: { type: string }
+        valid_until: { type: string }
+    AdminPricingRuleRequest:
+      type: object
+      required: [plan_id, user_type, operation_type, asset, fee_type, fee_value]
+      properties:
+        plan_id: { type: string }
+        pricing_version_id: { type: string }
+        user_type: { type: string }
+        operation_type: { type: string }
+        asset: { type: string }
+        fee_type: { type: string }
+        fee_value: { type: integer }
+        min_fee: { type: integer }
+        max_fee: { type: integer }
+    KycLimitRequest:
+      type: object
+      required: [level, daily_limit, monthly_limit]
+      properties:
+        level: { type: string }
+        daily_limit: { type: integer }
+        monthly_limit: { type: integer }
+    KycUpgradeRequest:
+      type: object
+      required: [user_id, level, status]
+      properties:
+        user_id: { type: string }
+        level: { type: string }
+        status: { type: string }
+        provider_ref: { type: string }
+    UserSettingsRequest:
+      type: object
+      required: [user_id]
+      properties:
+        user_id: { type: string }
+        conversion_priority:
+          type: array
+          items: { type: string }
+        allow_crypto_to_fiat: { type: boolean }
+    CreateInvoiceRequest:
+      type: object
+      required: [user_id, amount_brl]
+      properties:
+        user_id: { type: string }
+        amount_brl: { type: integer }
+    PayInvoiceRequest:
+      type: object
+      required: [invoice_id, payer_user_id, payer_account_id, method]
+      properties:
+        invoice_id: { type: string }
+        payer_user_id: { type: string }
+        payer_account_id: { type: string }
+        method: { type: string }
+    WithdrawalRequest:
+      type: object
+      required: [user_id, account_id, amount]
+      properties:
+        user_id: { type: string }
+        account_id: { type: string }
+        amount: { type: integer }
+        fee: { type: integer }
+        net_amount: { type: integer }
+        status: { type: string }
+        external_ref: { type: string }
+        occurred_at: { type: string }

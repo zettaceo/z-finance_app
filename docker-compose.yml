@@ -1,0 +1,43 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: zetta-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-zetta}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-zetta_change_me}
+      POSTGRES_DB: ${POSTGRES_DB:-zetta_core}
+      POSTGRES_INITDB_ARGS: ${POSTGRES_INITDB_ARGS:-}
+    ports:
+      - "5432:5432"
+    volumes:
+      - zetta_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-zetta} -d ${POSTGRES_DB:-zetta_core}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: zetta-app
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DB_URL: postgres://${POSTGRES_USER:-zetta}:${POSTGRES_PASSWORD:-zetta_change_me}@db:5432/${POSTGRES_DB:-zetta_core}?sslmode=disable
+      WEBHOOK_SECRET: ${WEBHOOK_SECRET:-zetta_webhook_secret}
+      AUTH_SECRET: ${AUTH_SECRET:-zetta_auth_secret}
+      APP_NAME: ${APP_NAME:-Z-BANK}
+      HTTP_PORT: ${HTTP_PORT:-8080}
+      VELOCITY_MAX_TX_PER_MINUTE: ${VELOCITY_MAX_TX_PER_MINUTE:-}
+      VELOCITY_MAX_TX_PER_HOUR: ${VELOCITY_MAX_TX_PER_HOUR:-}
+      VELOCITY_MAX_AMOUNT_PER_MINUTE: ${VELOCITY_MAX_AMOUNT_PER_MINUTE:-}
+      VELOCITY_MAX_AMOUNT_PER_HOUR: ${VELOCITY_MAX_AMOUNT_PER_HOUR:-}
+    ports:
+      - "${HTTP_PORT:-8080}:8080"
+
+volumes:
+  zetta_pg_data:
