@@ -227,9 +227,9 @@ export default function Investir() {
                 title: 'Swap BTC → ETH', action: 'crypto_swap', successMsg: 'Swap realizado!',
                 description: 'Troca instantânea com melhor taxa do mercado.',
                 fields: [
-                  { key: 'fromSymbol', label: 'De', type: 'text', default: 'BTC' },
-                  { key: 'toSymbol', label: 'Para', type: 'text', default: 'ETH' },
-                  { key: 'fromAmount', label: 'Quantidade BTC', type: 'number', default: 0.01, step: 0.0001 },
+                  { key: 'from', label: 'De', type: 'text', default: 'BTC' },
+                  { key: 'to', label: 'Para', type: 'text', default: 'ETH' },
+                  { key: 'amount', label: 'Quantidade BTC', type: 'number', default: 0.01, step: 0.0001 },
                 ],
                 submitLabel: 'Executar swap',
               })
@@ -239,9 +239,9 @@ export default function Investir() {
               action: () => setModal({
                 title: 'Swap ETH → USDT', action: 'crypto_swap', successMsg: 'Swap realizado!',
                 fields: [
-                  { key: 'fromSymbol', label: 'De', type: 'text', default: 'ETH' },
-                  { key: 'toSymbol', label: 'Para', type: 'text', default: 'USDT' },
-                  { key: 'fromAmount', label: 'Quantidade ETH', type: 'number', default: 0.1, step: 0.01 },
+                  { key: 'from', label: 'De', type: 'text', default: 'ETH' },
+                  { key: 'to', label: 'Para', type: 'text', default: 'USDT' },
+                  { key: 'amount', label: 'Quantidade ETH', type: 'number', default: 0.1, step: 0.01 },
                 ],
                 submitLabel: 'Executar swap',
               })
@@ -251,9 +251,9 @@ export default function Investir() {
               action: () => setModal({
                 title: 'USDT → BRL', action: 'crypto_swap', successMsg: 'Conversão realizada!',
                 fields: [
-                  { key: 'fromSymbol', label: 'De', type: 'text', default: 'USDT' },
-                  { key: 'toSymbol', label: 'Para', type: 'text', default: 'BRL' },
-                  { key: 'fromAmount', label: 'Quantidade USDT', type: 'number', default: 100, step: 1 },
+                  { key: 'from', label: 'De', type: 'text', default: 'USDT' },
+                  { key: 'to', label: 'Para', type: 'text', default: 'BRL' },
+                  { key: 'amount', label: 'Quantidade USDT', type: 'number', default: 100, step: 1 },
                 ],
                 submitLabel: 'Converter',
               })

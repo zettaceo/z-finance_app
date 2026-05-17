@@ -72,6 +72,43 @@ export default function ZPass() {
   const nextReview = new Date(Date.now() + 150 * 86400000)
 
   function handleExport() {
+    const payload = {
+      zpass_id: zpId,
+      issued_at: new Date().toISOString(),
+      issuer: 'Z-Finance Identity Service',
+      version: '1.0',
+      holder: {
+        name: u.name,
+        email: u.email,
+        type: u.type,
+        plan: store.persona,
+      },
+      verification: {
+        kyc_level: u.kycLevel || 'FULL',
+        kyc_status: 'VERIFIED',
+        verified_at: verifiedAt.toISOString(),
+        next_review: nextReview.toISOString(),
+        vasp_active: true,
+      },
+      jurisdictions: JURISDICTIONS.map(j => ({ code: j.code, name: j.name, status: j.status })),
+      regulatory_profile: {
+        fatf_risk: reg?.fatfRisk || 'LOW',
+        pep: reg?.pep ?? false,
+        sanctions: reg?.sanctions ?? false,
+        travel_rule: reg?.travelRule ?? true,
+        license_emi: reg?.licenseEmi ?? true,
+      },
+      signature: `sha256:${idHash}-${Date.now().toString(36)}`,
+    }
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `z-pass-${zpId}.json`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
     setExported(true)
     setTimeout(() => setExported(false), 2500)
   }

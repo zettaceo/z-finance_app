@@ -48,6 +48,19 @@ function generateResponse(msg, store) {
     return `⚡ **PIX Z-Finance:**\n\nSuas chaves cadastradas:\n• CPF · E-mail · Telefone · Aleatória\n\nLimite disponível hoje: ${fmt(store.kyc.limits.daily - (store.kyc.limits.used?.daily || 1250000))}\n\nO Z-Finance processa PIX em **< 2 segundos** com ${store.observability.uptime} de uptime.\n\n💡 Use "PIX Internacional" no Mover para enviar para USD, AED ou EUR.`
   }
 
+  if (lower.includes('dirham') || (lower.includes('aed') && (lower.includes('saldo') || lower.includes('conta') || lower.includes('dubai')))) {
+    const aed = c.aed
+    const aedRate = store.market.AED.rate
+    if (aed) {
+      const brlEquiv = Math.round(aed.balance * aedRate / 100)
+      return `🇦🇪 **Conta AED (Dubai):**\n\nSaldo: AED ${(aed.balance/100).toFixed(2)}\nEquivalente: ${fmt(brlEquiv)}\n\nCotação atual: R$ ${(aedRate/100).toFixed(2)} por AED 1,00\nJurisdição: 🇦🇪 ARE — VASP ativo\n\n💡 Você pode enviar BRL via PIX e converter automaticamente para AED na ação "PIX → AED" da aba Mover.`
+    }
+  }
+
+  if (lower.includes('pix internacional') || lower.includes('pix intl') || lower.includes('enviar dubai') || lower.includes('enviar exterior')) {
+    return `🌍 **PIX Internacional:**\n\nEnvie BRL via PIX e o destinatário recebe na moeda local em até D+1.\n\n**Países suportados:**\n• 🇺🇸 Estados Unidos (USD) — liquidação D+0\n• 🇦🇪 Emirados Árabes (AED) — liquidação D+0\n• 🇪🇺 Zona do Euro (EUR) — liquidação D+1 (SEPA)\n• 🇲🇽 México (MXN) — em breve\n• 🇦🇷 Argentina (ARS) — em breve\n\nTaxa: 1.5% sobre o valor + spread de câmbio transparente.\n\n💡 Acesse Mover → "PIX Intl" para iniciar o envio.`
+  }
+
   if (lower.includes('câmbio') || lower.includes('cambio') || lower.includes('cotar') || lower.includes('dólar') || lower.includes('aed')) {
     const m = store.market
     return `💱 **Câmbio ao vivo:**\n\n🇺🇸 USD: R$ ${(m.USD.rate/100).toFixed(2)} (${m.USD.change >= 0 ? '+' : ''}${m.USD.change}%)\n🇦🇪 AED: R$ ${(m.AED.rate/100).toFixed(2)} (${m.AED.change >= 0 ? '+' : ''}${m.AED.change}%)\n🇪🇺 EUR: R$ ${(m.EUR.rate/100).toFixed(2)} (${m.EUR.change >= 0 ? '+' : ''}${m.EUR.change}%)\n🇬🇧 GBP: R$ ${(m.GBP.rate/100).toFixed(2)} (${m.GBP.change >= 0 ? '+' : ''}${m.GBP.change}%)\n\n💡 Use o PIX Internacional para enviar BRL e receber em qualquer moeda.`
@@ -60,7 +73,11 @@ function generateResponse(msg, store) {
 
   if (lower.includes('crédito') || lower.includes('credito') || lower.includes('empréstimo') || lower.includes('score') || lower.includes('z-score')) {
     const cr = store.credit
-    return `🏦 **Z-Score e Crédito:**\n\nZ-Score: **${cr.score}** (${cr.scoreLabel})\nLimite total: ${fmt(cr.limit)}\nDisponível: ${fmt(cr.limit - cr.limitUsed)}\n\nOfertas disponíveis:\n• Pessoal: até ${fmt(2000000)} a 1.8% a.m.\n• Crypto colateral: até ${fmt(3000000)} a 1.2% a.m.\n• Empresarial: até ${fmt(10000000)} a 2.1% a.m.\n\n💡 Acesse a aba Crédito para simular e contratar.`
+    const active = (cr.loans || []).filter(l => l.status === 'ACTIVE')
+    const activeBlock = active.length > 0
+      ? `\n\n**Empréstimos ativos (${active.length}):**\n${active.map(l => `• ${l.type}: ${fmt(l.balance)} restantes · próxima parcela em ${Math.max(0, Math.ceil((new Date(l.nextDue) - Date.now()) / 86400000))} dias`).join('\n')}`
+      : ''
+    return `🏦 **Z-Score e Crédito:**\n\nZ-Score: **${cr.score}** (${cr.scoreLabel})\nLimite total: ${fmt(cr.limit)}\nUtilizado: ${fmt(cr.limitUsed)}\nDisponível: ${fmt(cr.limit - cr.limitUsed)}${activeBlock}\n\n**Ofertas disponíveis:**\n• Pessoal: até ${fmt(2000000)} a 1.8% a.m.\n• Crypto colateral: até ${fmt(3000000)} a 1.2% a.m.\n• Empresarial: até ${fmt(10000000)} a 2.1% a.m.\n\n💡 Acesse a aba Crédito para simular e contratar.`
   }
 
   if (lower.includes('rentabilizar') || lower.includes('investir') || lower.includes('investimento') || lower.includes('rendimento')) {

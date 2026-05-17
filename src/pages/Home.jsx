@@ -44,9 +44,8 @@ export default function Home() {
 
   const acc = store.accounts[activeAccount]
   const totalBRL = store.accounts.main.balance + store.accounts.invest.balance
-  const cryptoTotal = store.crypto.reduce((s, c) => s + c.amount * c.price, 0)
   const cryptoBRL = store.crypto.reduce((s, c) => s + c.amount * c.price * 100, 0)
-  const totalWealth = totalBRL + cryptoTotal
+  const totalWealth = totalBRL + cryptoBRL
 
   const dailyLimitDisplay = isInstitutional
     ? 'Ilimitado'
@@ -188,7 +187,7 @@ export default function Home() {
               </span>
             </div>
             <p style={{ fontSize: 13, color: 'var(--t3)', marginTop: 6 }}>
-              Patrimônio total: {hidden ? '•••••' : fmt(totalBRL + cryptoTotal, 'BRL')}
+              Patrimônio total: {hidden ? '•••••' : fmt(totalWealth, 'BRL')}
             </p>
           </div>
           <button onClick={() => setHidden(h => !h)} style={{
@@ -345,8 +344,8 @@ export default function Home() {
               contentStyle={{ background: 'var(--surface-2)', border: '1px solid var(--border)', borderRadius: 8, color: 'var(--t1)', fontSize: 12 }}
               formatter={v => [fmt(v * 100), '']}
             />
-            <Area type="monotone" dataKey="in" stroke="var(--accent)" strokeWidth={2} fill="url(#cfGrad)" dot={false} />
-            <Area type="monotone" dataKey="out" stroke="#F87171" strokeWidth={1.5} fill="none" strokeDasharray="3 3" dot={false} />
+            <Area type="monotone" dataKey="income" stroke="var(--accent)" strokeWidth={2} fill="url(#cfGrad)" dot={false} />
+            <Area type="monotone" dataKey="expenses" stroke="#F87171" strokeWidth={1.5} fill="none" strokeDasharray="3 3" dot={false} />
           </AreaChart>
         </ResponsiveContainer>
         <div style={{ display: 'flex', gap: 16, marginTop: 12 }}>
@@ -366,7 +365,7 @@ export default function Home() {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
           <p style={{ fontWeight: 700, fontSize: 15, color: 'var(--t1)', margin: 0 }}>Criptoativos</p>
           <span style={{ fontSize: 12, color: 'var(--accent)', fontWeight: 600 }}>
-            {hidden ? '•••••' : fmt(cryptoTotal)}
+            {hidden ? '•••••' : fmt(cryptoBRL)}
           </span>
         </div>
         <div style={{ display: 'flex', gap: 12, overflowX: 'auto', paddingBottom: 8, scrollSnapType: 'x mandatory' }} className="hide-scroll">

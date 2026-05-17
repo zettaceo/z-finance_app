@@ -131,6 +131,42 @@ export default function Mais() {
             </div>
           </div>
 
+          {compliance?.events?.length > 0 && (
+            <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 18, overflow: 'hidden' }}>
+              <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border)' }}>
+                <p style={{ fontWeight: 700, fontSize: 14, color: 'var(--t1)', margin: 0 }}>Casos recentes</p>
+              </div>
+              {compliance.events.slice(0, 6).map((c, i, arr) => {
+                const riskColor = c.riskLevel === 'HIGH' ? '#F87171' : c.riskLevel === 'MEDIUM' ? '#F59E0B' : '#34D399'
+                const statusColor = c.status === 'OPEN' ? '#F59E0B' : c.status === 'RESOLVED' ? '#34D399' : 'var(--t3)'
+                const date = new Date(c.createdAt)
+                return (
+                  <div key={c.id} style={{
+                    display: 'flex', alignItems: 'center', gap: 12, padding: '14px 20px',
+                    borderBottom: i < arr.length - 1 ? '1px solid var(--border)' : 'none',
+                  }}>
+                    <AlertTriangle size={18} color={riskColor} style={{ flexShrink: 0 }} />
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--t1)', margin: '0 0 3px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {c.title}
+                      </p>
+                      <p style={{ fontSize: 11, color: 'var(--t3)', margin: 0, fontFamily: 'DM Mono, monospace' }}>
+                        {c.type} · {c.userId || '—'} · {date.toLocaleDateString('pt-BR')}
+                      </p>
+                    </div>
+                    <span style={{
+                      fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 8, flexShrink: 0,
+                      color: statusColor,
+                      background: c.status === 'OPEN' ? 'rgba(245,158,11,0.15)' : c.status === 'RESOLVED' ? 'rgba(52,211,153,0.15)' : 'rgba(255,255,255,0.06)',
+                    }}>
+                      {c.status || 'OPEN'}
+                    </span>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+
           {[
             {
               label: 'Abrir Caso', sub: 'Iniciar investigação de compliance',

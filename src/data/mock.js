@@ -168,7 +168,11 @@ export function buildStore() {
     invoices:         [],
     payments:         [],
     pixKeys:          [{ id:uid(), type:'EMAIL', key:'rafael@zetta.bank', createdAt:daysAgo(30) }],
-    compliance:       { casesOpen:2, casesClosed:18, casesEscalated:1, events:[] },
+    compliance:       { casesOpen:2, casesClosed:18, casesEscalated:1, events:[
+      { id:uid(), type:'AML', title:'Volume acima do padrão histórico — verificação solicitada', riskLevel:'MEDIUM', status:'OPEN', userId:'USR-027', createdAt:new Date(Date.now()-2*86400000).toISOString() },
+      { id:uid(), type:'PEP_MATCH', title:'Match parcial em lista PEP — análise manual', riskLevel:'HIGH', status:'OPEN', userId:'USR-103', createdAt:new Date(Date.now()-5*86400000).toISOString() },
+      { id:uid(), type:'KYC', title:'KYC incompleto — documentação adicional', riskLevel:'LOW', status:'RESOLVED', userId:'USR-014', createdAt:new Date(Date.now()-8*86400000).toISOString() },
+    ]},
     preRegistrations: [
       { id:uid(), name:'Ana Costa',       email:'ana@startup.com',    plan:'BUSINESS',     status:'pending',  createdAt:daysAgo(3) },
       { id:uid(), name:'Dubai Corp LLC',  email:'ops@dubaicorp.ae',   plan:'INSTITUTIONAL',status:'verified', createdAt:daysAgo(7) },
@@ -560,15 +564,18 @@ export function simulate(store, action, data = {}) {
 
     /* ── Compliance ─────────────────────── */
     case 'compliance_case': {
-      const c = { id:uid(), type:data.type||'SUSPICIOUS_ACTIVITY', status:'OPEN', riskLevel:data.risk||'HIGH', title:data.title||'Atividade suspeita detectada', createdAt:now.toISOString() }
-      s.compliance.push(c)
+      const c = { id:uid(), type:data.reason||data.type||'SUSPICIOUS_ACTIVITY', status:'OPEN', riskLevel:data.risk||'HIGH', title:data.description||data.title||'Atividade suspeita detectada', userId:data.userId||'—', createdAt:now.toISOString() }
+      s.compliance.events.unshift(c)
+      s.compliance.casesOpen = (s.compliance.casesOpen||0) + 1
       msg = `Case aberto: ${c.title} [${c.riskLevel}]`
       details = { caseId:c.id, type:c.type, riskLevel:c.riskLevel, status:'OPEN' }
       break
     }
     case 'compliance_event': {
+      const e = { id:uid(), kind:'EVENT', eventType:data.eventType||'MANUAL_REVIEW', title:data.details||'Evento de compliance', createdAt:now.toISOString() }
+      s.compliance.events.unshift(e)
       msg = 'Evento de compliance registrado'
-      details = { eventType:data.eventType||'MANUAL_REVIEW', caseId:data.caseId||'—', analyst:'Sistema Zetta', ts:now.toISOString() }
+      details = { eventType:e.eventType, caseId:data.caseId||'—', analyst:'Sistema Zetta', ts:now.toISOString() }
       break
     }
 
